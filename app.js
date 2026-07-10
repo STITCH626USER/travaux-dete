@@ -816,6 +816,31 @@ function initTamagotchi() {
     // Start with Mickey bouncing
     petWrapper.classList.add("pet-bounce");
 
+    // Helper to generate retro beep sounds
+    function playBeep(frequency = 800, duration = 80) {
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+            const audioCtx = new AudioContextClass();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = "sine";
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
+        } catch (e) {
+            console.warn("Audio Context beep blocked or unsupported:", e);
+        }
+    }
+
     // Helper to switch scenes
     function showScene(sceneId) {
         if (sceneLivingroom) sceneLivingroom.classList.add("hidden");
@@ -1029,6 +1054,8 @@ function initTamagotchi() {
     // Feed action: switch to kitchen, sit on chair, eat bowl of cereal
     btnFeed.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        playBeep(650, 70);
+        setTimeout(() => playBeep(800, 70), 85);
 
         isEating = true;
         iconFood.classList.add("active");
@@ -1079,6 +1106,9 @@ function initTamagotchi() {
     // Play action: walk to center, disco dance
     btnPlay.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        playBeep(800, 60);
+        setTimeout(() => playBeep(1000, 60), 75);
+        setTimeout(() => playBeep(1200, 60), 150);
 
         isDancing = true;
         iconLove.classList.add("active");
@@ -1115,6 +1145,7 @@ function initTamagotchi() {
     // Toilet action: switch to bathroom, sit on toilet & poop sparkles
     btnClean.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        playBeep(450, 150);
 
         isPooping = true;
         iconClean.classList.add("active");
@@ -1153,6 +1184,7 @@ function initTamagotchi() {
     // Sleep toggle action: switch to bedroom, lie down in bed, lights out
     btnSleep.addEventListener("click", () => {
         if (isDead || isWalking || isDancing || isPooping || isEating) return;
+        playBeep(320, 180);
 
         if (!isSleeping) {
             isSleeping = true;

@@ -1136,9 +1136,19 @@ input:checked + .slider:before {
 
 /* 🛋️ Scene 1: Living Room */
 #scene-livingroom {
-    background: #00e5ff; /* Light Sky Blue matching photo */
-    background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
-    background-size: 100% 2px;
+    background-color: #8b5cf6; /* Purple wallpaper matching photo */
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(0,0,0,0.06) 12px, rgba(0,0,0,0.06) 14px);
+}
+.star-garland {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 5px;
+    letter-spacing: 5px;
+    z-index: 2;
+    opacity: 0.85;
 }
 .room-floor-livingroom {
     background: linear-gradient(to bottom, #d97706, #a16207); /* Wooden Floor */
@@ -1176,9 +1186,8 @@ input:checked + .slider:before {
 
 /* 🛏️ Scene 2: Bedroom */
 #scene-bedroom {
-    background: #fef3c7; /* Warm Beige / Cream */
-    background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
-    background-size: 100% 2px;
+    background-color: #fef3c7; /* Warm Beige / Cream */
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(120,53,4,0.04) 8px, rgba(120,53,4,0.04) 10px);
 }
 .room-floor-bedroom {
     background: linear-gradient(to bottom, #ca8a04, #854d0e); /* Oak wood floor */
