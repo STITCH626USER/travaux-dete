@@ -1424,8 +1424,6 @@ function initTamagotchi() {
 
     // 3D Real-time Animation Loop (60 FPS rendering)
     let lastTime = Date.now();
-    let activeRoomX = 0; // Target Camera X focus
-    let targetX = 0; // Target Mickey X position
 
     function tick() {
         requestAnimationFrame(tick);
