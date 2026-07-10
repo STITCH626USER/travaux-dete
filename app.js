@@ -753,28 +753,40 @@ function setupInstallBanner() {
 }
 
 // ==========================================
-// 🎮 3D ADIBOU-STYLE MICKEY GAME ENGINE
+// 🎮 RETRO-TAMAGOTCHI 1928 EMULATOR LOGIC
 // ==========================================
 function initTamagotchi() {
-    // Check if Three.js is loaded
-    if (typeof THREE === 'undefined') {
-        console.error("Three.js library is not loaded!");
-        document.getElementById("action-text").textContent = "Erreur: Three.js manquant";
+    // States
+    let hunger = 80;
+    let love = 80;
+    let sleep = 80;
+    let isSleeping = false;
+    let isDead = false;
+
+    // DOM Elements
+    const statFood = document.getElementById("stat-food");
+    const statLove = document.getElementById("stat-love");
+    const statSleep = document.getElementById("stat-sleep");
+    const lcdDisplay = document.getElementById("lcd-display");
+    const petWrapper = document.getElementById("pet-wrapper");
+    const mickeyMouth = document.getElementById("mickey-mouth");
+    const eyeL = document.getElementById("m-eye-l");
+    const eyeR = document.getElementById("m-eye-r");
+    const lcdSleeping = document.getElementById("lcd-sleeping-indicator");
+    const lcdDeath = document.getElementById("lcd-death");
+    const lcdAlert = document.getElementById("lcd-alert");
+    const lcdFoodContainer = document.getElementById("lcd-food-container");
+
+    const btnFeed = document.getElementById("t-btn-a");
+    const btnPlay = document.getElementById("t-btn-b");
+    const btnSleep = document.getElementById("t-btn-c");
+
+    if (!statFood || !statLove || !statSleep) {
+        console.warn("Tamagotchi UI elements missing!");
         return;
     }
 
-    // Stats states
-    let hunger = 80;
-    let love = 80;
-    let clean = 80;
-    let sleep = 80;
-    let level = 5;
-    let exp = 0;
-    let isSleeping = false;
-    let isDead = false;
-    let activeAction = "idle"; // "idle", "feed", "play", "clean", "sleep"
-    
-    // Audio click feedback beeps (Web Audio API)
+    // Audio click feedback beeps
     function playBeep(frequency = 800, duration = 80) {
         try {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -786,7 +798,7 @@ function initTamagotchi() {
             oscillator.type = "sine";
             oscillator.frequency.value = frequency;
             
-            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
 
             oscillator.connect(gainNode);
@@ -799,958 +811,166 @@ function initTamagotchi() {
         }
     }
 
-    // Action locks
-    let isWalking = false;
-    let isDancing = false;
-    let isPooping = false;
-    let isEating = false;
-
-    // DOM Elements
-    const hudHunger = document.getElementById("bar-hunger");
-    const hudLove = document.getElementById("bar-love");
-    const hudClean = document.getElementById("bar-clean");
-    const hudSleep = document.getElementById("bar-sleep");
-    const mickeyLv = document.getElementById("mickey-lv");
-    const pixelClock = document.getElementById("pixel-clock");
-    const actionText = document.getElementById("action-text");
-
-    const btnFeed = document.getElementById("btn-feed-3d");
-    const btnPlay = document.getElementById("btn-play-3d");
-    const btnClean = document.getElementById("btn-clean-3d");
-    const btnSleep = document.getElementById("btn-sleep-3d");
-
-    const container = document.getElementById("canvas-3d-container");
-    if (!container) return;
-
-    // 1. Setup Three.js WebGL Renderer, Scene, Camera
-    const width = container.clientWidth || 484;
-    const height = container.clientHeight || 364;
-    
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xbae6fd); // Light blue sky color
-    scene.fog = new THREE.FogExp2(0xbae6fd, 0.005);
-
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
-    // Initial camera position looking at Living Room
-    camera.position.set(0, 3.5, 13);
-    camera.lookAt(0, 2.5, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    container.innerHTML = ""; // Clear loader
-    container.appendChild(renderer.domElement);
-
-    // 2. Add Lighting (Cartoon ambient glow + Directional Shadow Caster)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 15);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 50;
-    const d = 15;
-    dirLight.shadow.camera.left = -d;
-    dirLight.shadow.camera.right = d;
-    dirLight.shadow.camera.top = d;
-    dirLight.shadow.camera.bottom = -d;
-    dirLight.shadow.bias = -0.0005;
-    scene.add(dirLight);
-
-    // 3. Materials
-    const blackMat = new THREE.MeshToonMaterial({ color: 0x1e1e1e });
-    const creamMat = new THREE.MeshToonMaterial({ color: 0xfde047 }); // Steamboat cheeks yellow/cream
-    const redMat = new THREE.MeshToonMaterial({ color: 0xef4444 });
-    const yellowMat = new THREE.MeshToonMaterial({ color: 0xfacc15 });
-    const whiteMat = new THREE.MeshToonMaterial({ color: 0xffffff });
-    const woodMat = new THREE.MeshToonMaterial({ color: 0xa16207 });
-    const greenMat = new THREE.MeshToonMaterial({ color: 0x22c55e });
-    const orangeMat = new THREE.MeshToonMaterial({ color: 0xf97316 });
-    const blueMat = new THREE.MeshToonMaterial({ color: 0x3b82f6 });
-    const silverMat = new THREE.MeshToonMaterial({ color: 0xcbd5e1 });
-
-    // 4. Construct Mickey Mouse 3D procedural character model
-    const mickeyGroup = new THREE.Group();
-    mickeyGroup.position.set(0, 1.8, 0); // Ground position
-    mickeyGroup.castShadow = true;
-    mickeyGroup.receiveShadow = true;
-    scene.add(mickeyGroup);
-
-    // Head Group
-    const headGroup = new THREE.Group();
-    headGroup.position.set(0, 1.9, 0);
-    mickeyGroup.add(headGroup);
-
-    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), blackMat);
-    headMesh.castShadow = true;
-    headGroup.add(headMesh);
-
-    // Ears
-    const earL = new THREE.Mesh(new THREE.SphereGeometry(0.48, 16, 16), blackMat);
-    earL.position.set(-0.7, 0.7, 0);
-    earL.castShadow = true;
-    headGroup.add(earL);
-
-    const earR = new THREE.Mesh(new THREE.SphereGeometry(0.48, 16, 16), blackMat);
-    earR.position.set(0.7, 0.7, 0);
-    earR.castShadow = true;
-    headGroup.add(earR);
-
-    // Face Snout cream mask
-    const snout = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), creamMat);
-    snout.position.set(0, -0.15, 0.5);
-    snout.scale.set(1, 0.7, 1.2);
-    headGroup.add(snout);
-
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), blackMat);
-    nose.position.set(0, -0.05, 0.95);
-    headGroup.add(nose);
-
-    // Cheeks
-    const cheekL = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), creamMat);
-    cheekL.position.set(-0.25, 0.05, 0.45);
-    headGroup.add(cheekL);
-
-    const cheekR = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), creamMat);
-    cheekR.position.set(0.25, 0.05, 0.45);
-    headGroup.add(cheekR);
-
-    // Eyes
-    const eyeLGroup = new THREE.Group();
-    eyeLGroup.position.set(-0.18, 0.25, 0.6);
-    headGroup.add(eyeLGroup);
-    const eyeLWhite = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), whiteMat);
-    eyeLWhite.scale.set(0.75, 1.5, 0.5);
-    eyeLGroup.add(eyeLWhite);
-    const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), blackMat);
-    pupilL.position.set(0, 0, 0.12);
-    pupilL.scale.set(0.6, 1.6, 0.5);
-    eyeLGroup.add(pupilL);
-
-    const eyeRGroup = new THREE.Group();
-    eyeRGroup.position.set(0.18, 0.25, 0.6);
-    headGroup.add(eyeRGroup);
-    const eyeRWhite = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), whiteMat);
-    eyeRWhite.scale.set(0.75, 1.5, 0.5);
-    eyeRGroup.add(eyeRWhite);
-    const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), blackMat);
-    pupilR.position.set(0, 0, 0.12);
-    pupilR.scale.set(0.6, 1.6, 0.5);
-    eyeRGroup.add(pupilR);
-
-    // Torso (Body)
-    const torsoMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.55, 1.0, 16), blackMat);
-    torsoMesh.position.set(0, 0.9, 0);
-    torsoMesh.castShadow = true;
-    mickeyGroup.add(torsoMesh);
-
-    // Red Shorts
-    const shortsGroup = new THREE.Group();
-    shortsGroup.position.set(0, 0.55, 0);
-    mickeyGroup.add(shortsGroup);
-
-    const shortsMesh = new THREE.Mesh(new THREE.SphereGeometry(0.62, 16, 16), redMat);
-    shortsMesh.scale.set(1, 0.8, 1);
-    shortsMesh.castShadow = true;
-    shortsGroup.add(shortsMesh);
-
-    // Buttons
-    const btnL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), whiteMat);
-    btnL.position.set(-0.2, 0.1, 0.5);
-    btnL.scale.set(0.7, 1.4, 0.6);
-    shortsGroup.add(btnL);
-
-    const btnR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), whiteMat);
-    btnR.position.set(0.2, 0.1, 0.5);
-    btnR.scale.set(0.7, 1.4, 0.6);
-    shortsGroup.add(btnR);
-
-    // Legs
-    const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8), blackMat);
-    legL.position.set(-0.25, 0.15, 0);
-    legL.castShadow = true;
-    mickeyGroup.add(legL);
-
-    const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8), blackMat);
-    legR.position.set(0.25, 0.15, 0);
-    legR.castShadow = true;
-    mickeyGroup.add(legR);
-
-    // Yellow Shoes
-    const shoeL = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), yellowMat);
-    shoeL.position.set(-0.25, -0.22, 0.12);
-    shoeL.scale.set(1.1, 0.7, 1.5);
-    shoeL.castShadow = true;
-    mickeyGroup.add(shoeL);
-
-    const shoeR = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), yellowMat);
-    shoeR.position.set(0.25, -0.22, 0.12);
-    shoeR.scale.set(1.1, 0.7, 1.5);
-    shoeR.castShadow = true;
-    mickeyGroup.add(shoeR);
-
-    // Arms
-    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 8), blackMat);
-    armL.position.set(-0.6, 1.1, 0);
-    armL.rotation.z = Math.PI / 4;
-    armL.castShadow = true;
-    mickeyGroup.add(armL);
-
-    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 8), blackMat);
-    armR.position.set(0.6, 1.1, 0);
-    armR.rotation.z = -Math.PI / 4;
-    armR.castShadow = true;
-    mickeyGroup.add(armR);
-
-    // Gloves (Hands)
-    const gloveL = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), whiteMat);
-    gloveL.position.set(-0.9, 0.8, 0);
-    gloveL.castShadow = true;
-    mickeyGroup.add(gloveL);
-
-    const gloveR = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), whiteMat);
-    gloveR.position.set(0.9, 0.8, 0);
-    gloveR.castShadow = true;
-    mickeyGroup.add(gloveR);
-
-    // Tail
-    const tailGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.2, 8);
-    const tail = new THREE.Mesh(tailGeo, blackMat);
-    tail.position.set(0, 0.4, -0.6);
-    tail.rotation.x = -Math.PI / 3;
-    tail.rotation.z = -Math.PI / 8;
-    mickeyGroup.add(tail);
-
-    // 5. Construct the 3D Rooms along X Axis (Living Room at X=0, Bedroom at X=40, Bathroom at X=80, Kitchen at X=120)
-
-    // Helper: Floor Grid Box Floor maker
-    function createRoomFloor(xOffset, width, depth, color) {
-        const floorGeo = new THREE.BoxGeometry(width, 0.4, depth);
-        const floorMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.position.set(xOffset, -0.2, 0);
-        floor.receiveShadow = true;
-        scene.add(floor);
-        return floor;
-    }
-
-    // Helper: Back wall maker
-    function createRoomWall(xOffset, width, height, color) {
-        const wallGeo = new THREE.BoxGeometry(width, height, 0.4);
-        const wallMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 });
-        const wall = new THREE.Mesh(wallGeo, wallMat);
-        wall.position.set(xOffset, height / 2, -6);
-        wall.receiveShadow = true;
-        scene.add(wall);
-        return wall;
-    }
-
-    // --- ROOM 1: LIVING ROOM (x = 0) ---
-    createRoomFloor(0, 30, 12, 0x854d0e); // Wooden Floor
-    createRoomWall(0, 30, 10, 0x8b5cf6);  // Purple Wall
-
-    // Vertical striped column panels on wall
-    for (let sx = -12; sx <= 12; sx += 6) {
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.3, 10, 0.1), new THREE.MeshStandardMaterial({ color: 0x7c3aed }));
-        stripe.position.set(sx, 5, -5.7);
-        scene.add(stripe);
-    }
-
-    // Star garlands on Living Room wall
-    const garlandGroup = new THREE.Group();
-    garlandGroup.position.set(0, 7.5, -5.5);
-    scene.add(garlandGroup);
-    for (let gx = -10; gx <= 10; gx += 3.5) {
-        const star = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.2), yellowMat);
-        star.rotation.z = Math.PI / 4;
-        star.position.set(gx, Math.sin(gx) * 0.2, 0);
-        garlandGroup.add(star);
-    }
-
-    // Green Couch
-    const couchGroup = new THREE.Group();
-    couchGroup.position.set(-6, 0.5, -3.5);
-    scene.add(couchGroup);
-    // Base
-    const couchBase = new THREE.Mesh(new THREE.BoxGeometry(5, 0.6, 2.2), greenMat);
-    couchBase.castShadow = true; couchBase.receiveShadow = true;
-    couchGroup.add(couchBase);
-    // Backrest
-    const couchBack = new THREE.Mesh(new THREE.BoxGeometry(5, 1.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x15803d }));
-    couchBack.position.set(0, 0.9, -0.8);
-    couchBack.castShadow = true;
-    couchGroup.add(couchBack);
-    // Armrests
-    const armL_Couch = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 2.2), new THREE.MeshStandardMaterial({ color: 0x15803d }));
-    armL_Couch.position.set(-2.2, 0.3, 0);
-    armL_Couch.castShadow = true;
-    couchGroup.add(armL_Couch);
-    const armR_Couch = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 2.2), new THREE.MeshStandardMaterial({ color: 0x15803d }));
-    armR_Couch.position.set(2.2, 0.3, 0);
-    armR_Couch.castShadow = true;
-    couchGroup.add(armR_Couch);
-
-    // Orange Armchair
-    const chairGroup = new THREE.Group();
-    chairGroup.position.set(6, 0.5, -3.5);
-    scene.add(chairGroup);
-    const chairBase = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.6, 2.2), orangeMat);
-    chairBase.castShadow = true; chairBase.receiveShadow = true;
-    chairGroup.add(chairBase);
-    const chairBack = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.4, 0.6), new THREE.MeshStandardMaterial({ color: 0xc2410c }));
-    chairBack.position.set(0, 0.9, -0.8);
-    chairBack.castShadow = true;
-    chairGroup.add(chairBack);
-    const armL_Chair = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 2.2), new THREE.MeshStandardMaterial({ color: 0xc2410c }));
-    armL_Chair.position.set(-1.0, 0.3, 0);
-    armL_Chair.castShadow = true;
-    chairGroup.add(armL_Chair);
-    const armR_Chair = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 2.2), new THREE.MeshStandardMaterial({ color: 0xc2410c }));
-    armR_Chair.position.set(1.0, 0.3, 0);
-    armR_Chair.castShadow = true;
-    chairGroup.add(armR_Chair);
-
-    // Floor Lamp
-    const lampGroup = new THREE.Group();
-    lampGroup.position.set(2, 0, -4.5);
-    scene.add(lampGroup);
-    const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5, 8), blackMat);
-    lampPole.position.y = 2.5;
-    lampPole.castShadow = true;
-    lampGroup.add(lampPole);
-    const lampShade = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.0, 0.8, 16), yellowMat);
-    lampShade.position.y = 4.8;
-    lampShade.castShadow = true;
-    lampGroup.add(lampShade);
-
-    // Disco Ball
-    const discoBall = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 16), silverMat);
-    discoBall.position.set(0, 7.5, -2);
-    discoBall.castShadow = true;
-    scene.add(discoBall);
-    const discoChain = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2, 8), blackMat);
-    discoChain.position.set(0, 9, -2);
-    scene.add(discoChain);
-
-    // --- ROOM 2: BEDROOM (x = 40) ---
-    createRoomFloor(40, 30, 12, 0x854d0e); // Oak floor
-    createRoomWall(40, 30, 10, 0xfef3c7);  // Beige Wall
-
-    // Bedroom wall stripes
-    for (let sx = 28; sx <= 52; sx += 4) {
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.15, 10, 0.1), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
-        stripe.position.set(sx, 5, -5.7);
-        scene.add(stripe);
-    }
-
-    // Wooden Bed
-    const bedGroup = new THREE.Group();
-    bedGroup.position.set(34, 0, -3.5);
-    scene.add(bedGroup);
-    // Headboard
-    const headboard = new THREE.Mesh(new THREE.BoxGeometry(0.6, 3.2, 4.4), woodMat);
-    headboard.position.set(-2.8, 1.4, 0);
-    headboard.castShadow = true;
-    bedGroup.add(headboard);
-    // Mattress
-    const mattress = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.9, 4.0), whiteMat);
-    mattress.position.set(0, 0.7, 0);
-    mattress.castShadow = true; mattress.receiveShadow = true;
-    bedGroup.add(mattress);
-    // Pillow
-    const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 2.0), silverMat);
-    pillow.position.set(-2.0, 1.25, 0);
-    bedGroup.add(pillow);
-    // Blue Blanket Mesh (Mickey slides under this)
-    const blanket = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 4.05), blueMat);
-    blanket.position.set(0.9, 0.8, 0);
-    blanket.castShadow = true;
-    bedGroup.add(blanket);
-
-    // Clock
-    const clockGroup = new THREE.Group();
-    clockGroup.position.set(40, 6, -5.7);
-    scene.add(clockGroup);
-    const clockBack = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.2, 24), whiteMat);
-    clockBack.rotation.x = Math.PI / 2;
-    clockBack.castShadow = true;
-    clockGroup.add(clockBack);
-    // Clock hands
-    const handH = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.05), blackMat);
-    handH.position.set(0, 0.2, 0.15);
-    clockGroup.add(handH);
-    const handM = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.05), blackMat);
-    handM.rotation.z = Math.PI / 2;
-    handM.position.set(0.3, 0, 0.15);
-    clockGroup.add(handM);
-
-    // Bedroom window
-    const windowGroup = new THREE.Group();
-    windowGroup.position.set(46, 5, -5.7);
-    scene.add(windowGroup);
-    const winPane = new THREE.Mesh(new THREE.BoxGeometry(4, 5, 0.2), blueMat); // blue pane
-    windowGroup.add(winPane);
-    const winFrame = new THREE.Mesh(new THREE.BoxGeometry(4.2, 5.2, 0.3), blackMat);
-    winFrame.position.z = -0.05;
-    windowGroup.add(winFrame);
-    // Blue Curtains
-    const curtainL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 5.2, 0.4), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
-    curtainL.position.set(-2.0, 0, 0.1);
-    curtainL.castShadow = true;
-    windowGroup.add(curtainL);
-    const curtainR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 5.2, 0.4), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
-    curtainR.position.set(2.0, 0, 0.1);
-    curtainR.castShadow = true;
-    windowGroup.add(curtainR);
-
-    // --- ROOM 3: BATHROOM (x = 80) ---
-    createRoomFloor(80, 30, 12, 0xa5f3fc); // Cyan tile floor
-    createRoomWall(80, 30, 10, 0xffffff);  // White Wall
-    // Grid tiles visual overlay lines
-    for (let sx = 66; sx <= 94; sx += 4) {
-        const line = new THREE.Mesh(new THREE.BoxGeometry(0.05, 10, 0.1), new THREE.MeshStandardMaterial({ color: 0xe0f2fe }));
-        line.position.set(sx, 5, -5.7);
-        scene.add(line);
-    }
-    for (let sy = 1; sy <= 9; sy += 3) {
-        const line = new THREE.Mesh(new THREE.BoxGeometry(30, 0.05, 0.1), new THREE.MeshStandardMaterial({ color: 0xe0f2fe }));
-        line.position.set(80, sy, -5.7);
-        scene.add(line);
-    }
-
-    // White Toilet Bowl
-    const toiletGroup = new THREE.Group();
-    toiletGroup.position.set(74, 0, -3.5);
-    scene.add(toiletGroup);
-    // Tank
-    const tank = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 2.2), whiteMat);
-    tank.position.set(-1.0, 1.7, 0);
-    tank.castShadow = true;
-    toiletGroup.add(tank);
-    // Bowl
-    const bowlBase = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.5, 1.2, 16), whiteMat);
-    bowlBase.position.set(0.3, 0.6, 0);
-    bowlBase.castShadow = true;
-    toiletGroup.add(bowlBase);
-    // Seat ring
-    const seat = new THREE.Mesh(new THREE.TorusGeometry(0.65, 0.12, 8, 24), blackMat);
-    seat.rotation.x = Math.PI / 2;
-    seat.position.set(0.3, 1.2, 0);
-    seat.scale.set(1, 1.2, 1);
-    toiletGroup.add(seat);
-
-    // Sink and Mirror
-    const sinkGroup = new THREE.Group();
-    sinkGroup.position.set(86, 0, -3.5);
-    scene.add(sinkGroup);
-    const sinkCol = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.6, 8), whiteMat);
-    sinkCol.position.y = 0.8;
-    sinkCol.castShadow = true;
-    sinkGroup.add(sinkCol);
-    const sinkBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.6, 0.6, 16), whiteMat);
-    sinkBowl.position.y = 1.6;
-    sinkBowl.castShadow = true;
-    sinkGroup.add(sinkBowl);
-    const mirror = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.4, 0.2), blueMat);
-    mirror.position.set(0, 3.8, -1.9);
-    mirror.castShadow = true;
-    sinkGroup.add(mirror);
-
-    // 3D Particles Sparkles Array for Toilet Poop animation
-    const sparkles = [];
-    const sparkleColors = [0xff007f, 0x00ffff, 0x39ff14, 0xff00ff, 0xffff00, 0xff7f00];
-    const sparkleGeo = new THREE.SphereGeometry(0.12, 8, 8);
-    for (let i = 0; i < 20; i++) {
-        const spMat = new THREE.MeshBasicMaterial({ color: sparkleColors[i % sparkleColors.length] });
-        const spMesh = new THREE.Mesh(sparkleGeo, spMat);
-        spMesh.visible = false;
-        scene.add(spMesh);
-        sparkles.push({
-            mesh: spMesh,
-            vx: 0,
-            vy: 0,
-            vz: 0,
-            age: 0
-        });
-    }
-
-    // --- ROOM 4: KITCHEN (x = 120) ---
-    createRoomFloor(120, 30, 12, 0xd1d5db); // Checkered Base Floor
-    createRoomWall(120, 30, 10, 0xfed7aa);  // Peach wall
-
-    // Kitchen fine stripes
-    for (let sx = 108; sx <= 132; sx += 5) {
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 10, 0.1), new THREE.MeshStandardMaterial({ color: 0xffedd5 }));
-        stripe.position.set(sx, 5, -5.7);
-        scene.add(stripe);
-    }
-
-    // Oven Stove
-    const stove = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.2, 2.2), silverMat);
-    stove.position.set(131, 1.1, -3.5);
-    stove.castShadow = true;
-    scene.add(stove);
-    const stoveDoor = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 0.1), blackMat);
-    stoveDoor.position.set(131, 1.1, -2.35);
-    scene.add(stoveDoor);
-
-    // Wall Cabinet
-    const cabinet = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 1.2), woodMat);
-    cabinet.position.set(110, 6.2, -5.0);
-    cabinet.castShadow = true;
-    scene.add(cabinet);
-
-    // Dinner Table and Chair
-    const tableGroup = new THREE.Group();
-    tableGroup.position.set(121, 0, -3.2);
-    scene.add(tableGroup);
-    const tableLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.6, 8), woodMat);
-    tableLeg.position.y = 0.8;
-    tableLeg.castShadow = true;
-    tableGroup.add(tableLeg);
-    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 0.2, 24), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-    tableTop.position.y = 1.6;
-    tableTop.castShadow = true; tableTop.receiveShadow = true;
-    tableGroup.add(tableTop);
-
-    // Wood Chair
-    const kChairGroup = new THREE.Group();
-    kChairGroup.position.set(117, 0, -3.2);
-    scene.add(kChairGroup);
-    const seatLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.0, 8), woodMat);
-    seatLeg.position.y = 0.5;
-    seatLeg.castShadow = true;
-    kChairGroup.add(seatLeg);
-    const seatBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 1.2), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-    seatBase.position.y = 1.0;
-    seatBase.castShadow = true; seatBase.receiveShadow = true;
-    kChairGroup.add(seatBase);
-    const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.4, 1.2), woodMat);
-    seatBack.position.set(-0.55, 1.7, 0);
-    seatBack.castShadow = true;
-    kChairGroup.add(seatBack);
-
-    // Cereal Bowl Blue
-    const cBowl = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2), blueMat);
-    cBowl.position.set(121, 1.7, -3.2);
-    cBowl.castShadow = true;
-    scene.add(cBowl);
-    
-    // Cereal loops colorful mesh
-    const loopsGroup = new THREE.Group();
-    loopsGroup.position.set(121, 1.9, -3.2);
-    scene.add(loopsGroup);
-    for (let li = 0; li < 6; li++) {
-        const loopColor = li % 3 === 0 ? 0xef4444 : (li % 3 === 1 ? 0xfacc15 : 0x22c55e);
-        const loopMat = new THREE.MeshBasicMaterial({ color: loopColor });
-        const loop = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), loopMat);
-        loop.position.set(
-            (Math.random() - 0.5) * 0.3,
-            (Math.random() - 0.5) * 0.1,
-            (Math.random() - 0.5) * 0.3
-        );
-        loopsGroup.add(loop);
-    }
-    loopsGroup.visible = false;
-
-    // --- GAME ENGINE STATE ANIMATION / CONTROL LOOP ---
-
-    let activeRoomX = 0; // Target Camera X focus
-    let targetX = 0; // Target Mickey X position
-    let isTransitioning = false;
-
-    // Beep audio double note FEED
-    function triggerFeedBeep() {
-        playBeep(650, 70);
-        setTimeout(() => playBeep(800, 70), 85);
-    }
-
-    // Beep audio arpeggio PLAY
-    function triggerPlayBeep() {
-        playBeep(800, 60);
-        setTimeout(() => playBeep(1000, 60), 75);
-        setTimeout(() => playBeep(1200, 60), 150);
-    }
-
-    // Update screen HTML HUD fills with dynamic color grading
-    function updateHUD() {
-        const stats = [
-            { bar: hudHunger, val: hunger },
-            { bar: hudLove, val: love },
-            { bar: hudClean, val: clean },
-            { bar: hudSleep, val: sleep }
-        ];
-        
-        stats.forEach(s => {
-            if (!s.bar) return;
-            s.bar.style.width = s.val + "%";
-            
-            // Set gauge color gradient dynamically based on value
-            if (s.val > 50) {
-                s.bar.style.background = "linear-gradient(90deg, #22c55e, #4ade80)"; // Green
-            } else if (s.val > 25) {
-                s.bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; // Orange/Yellow
-            } else {
-                s.bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)"; // Red
-            }
-        });
-
-        if (mickeyLv) mickeyLv.textContent = level;
-    }
-
-    function gainExp() {
-        exp += 1;
-        if (exp >= 5) {
-            exp = 0;
-            level += 1;
-            updateHUD();
-        }
-    }
-
-    // Dynamic Clock
-    function updateClock() {
-        const now = new Date();
-        const hrs = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
-        if (pixelClock) pixelClock.textContent = `${hrs}:${mins}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // 3D Real-time Animation Loop (60 FPS rendering)
-    let lastTime = Date.now();
-
-    function tick() {
-        requestAnimationFrame(tick);
-        
-        const now = Date.now();
-        const delta = now - lastTime;
-        lastTime = now;
-
-        if (isDead) {
-            // Dead rotation layout
-            mickeyGroup.rotation.z = Math.PI / 2;
-            mickeyGroup.position.y = 0.5;
-            renderer.render(scene, camera);
-            return;
-        }
-
-        // Camera smooth panned tracking target X
-        camera.position.x += (activeRoomX - camera.position.x) * 0.08;
-        // Directional light shadow box follows camera X
-        dirLight.position.x = camera.position.x + 10;
-        dirLight.target.position.set(camera.position.x, 0, 0);
-        camera.lookAt(camera.position.x, 3.2, 0);
-
-        // Mickey walk movement X
-        if (mickeyGroup.position.x !== targetX) {
-            isWalking = true;
-            const dist = targetX - mickeyGroup.position.x;
-            mickeyGroup.position.x += Math.sign(dist) * 0.16;
-            
-            // Flip facing direction when walking profile
-            if (dist < 0) {
-                mickeyGroup.rotation.y = -Math.PI / 2; // facing left
-            } else {
-                mickeyGroup.rotation.y = Math.PI / 2; // facing right
-            }
-
-            // Swing legs / bob body
-            const time = now * 0.012;
-            legL.rotation.x = Math.sin(time) * 0.7;
-            legR.rotation.x = -Math.sin(time) * 0.7;
-            mickeyGroup.position.y = 1.8 + Math.abs(Math.sin(time)) * 0.18;
-            
-            // Swing arms walking
-            armL.rotation.x = -Math.sin(time) * 0.5;
-            armR.rotation.x = Math.sin(time) * 0.5;
-
-            if (Math.abs(mickeyGroup.position.x - targetX) < 0.18) {
-                mickeyGroup.position.x = targetX;
-                isWalking = false;
-                legL.rotation.x = 0;
-                legR.rotation.x = 0;
-                armL.rotation.x = 0;
-                armR.rotation.x = 0;
-
-                // --- TRIGGER STATE TRANSITION ON ARRIVAL AT TARGET X ---
-                if (activeAction === "feed" && !isEating) {
-                    isEating = true;
-                    actionText.textContent = "Yum Yum ! C'est délicieux ! 🥣";
-
-                    setTimeout(() => {
-                        hunger = Math.min(100, hunger + 20);
-                        gainExp();
-                        updateHUD();
-
-                        actionText.textContent = "Mickey retourne au salon";
-                        activeRoomX = 0;
-                        targetX = 0;
-                        isEating = false;
-                        activeAction = "idle";
-                        gloveR.position.set(0.9, 0.8, 0); // reset glove pos
-                    }, 3500);
-                } 
-                else if (activeAction === "play" && !isDancing) {
-                    isDancing = true;
-                    actionText.textContent = "C'est l'heure du DISCO ! 🎵💃";
-
-                    setTimeout(() => {
-                        love = Math.min(100, love + 20);
-                        gainExp();
-                        updateHUD();
-
-                        actionText.textContent = "Danse terminée ! Mickey s'est bien amusé";
-                        isDancing = false;
-                        activeAction = "idle";
-                        armL.rotation.set(0, 0, Math.PI / 4);
-                        armR.rotation.set(0, 0, -Math.PI / 4);
-                    }, 4000);
-                }
-                else if (activeAction === "clean" && !isPooping) {
-                    isPooping = true;
-                    actionText.textContent = "EXPLOSION DE SPARKLES !!! ✨💩";
-
-                    // Initialize particles
-                    sparkles.forEach(s => {
-                        s.mesh.position.set(77.8, 1.5, -3.5);
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = 0.04 + Math.random() * 0.08;
-                        s.vx = Math.cos(angle) * speed + 0.04;
-                        s.vy = 0.04 + Math.random() * 0.08;
-                        s.vz = Math.sin(angle) * speed;
-                        s.age = Math.floor(Math.random() * 30);
-                    });
-
-                    setTimeout(() => {
-                        clean = Math.min(100, clean + 25);
-                        updateHUD();
-
-                        actionText.textContent = "Mickey est tout propre ! Retour au salon";
-                        activeRoomX = 0;
-                        targetX = 0;
-                        isPooping = false;
-                        activeAction = "idle";
-                    }, 3500);
-                }
-                else if (activeAction === "sleep" && !isSleeping) {
-                    isSleeping = true;
-                    actionText.textContent = "Bonne nuit Mickey ! Zzz... 💤";
-                    // Dim lights
-                    ambientLight.intensity = 0.15;
-                    dirLight.intensity = 0;
-                    updateHUD();
-                }
-            }
+    // Make Mickey bounce by default
+    petWrapper.classList.add("pet-bounce");
+
+    // Update screen UI gauges
+    function updateScreen() {
+        if (statFood) statFood.style.width = hunger + "%";
+        if (statLove) statLove.style.width = love + "%";
+        if (statSleep) statSleep.style.width = sleep + "%";
+
+        // Alert if hunger is low
+        if (hunger <= 25 && !isDead && !isSleeping) {
+            lcdAlert.classList.remove("hidden");
         } else {
-            isWalking = false;
+            lcdAlert.classList.add("hidden");
         }
-
-        // --- SPECIFIC ACTION ANIMATIONS ---
-        
-        // 1. Disco Dancing loop (faces the camera while wiggling)
-        if (isDancing) {
-            const time = now * 0.015;
-            mickeyGroup.rotation.y = Math.sin(time) * 0.5; // slight head wiggle facing camera
-            mickeyGroup.position.y = 1.8 + Math.abs(Math.sin(time * 0.8)) * 0.3;
-            // Wiggle arms up and down
-            armL.rotation.z = Math.PI / 4 + Math.sin(time) * 0.8;
-            armR.rotation.z = -Math.PI / 4 - Math.sin(time) * 0.8;
-            // Spin disco ball
-            discoBall.rotation.y += 0.04;
-        }
-
-        // 2. Kitchen Eating wiggling
-        if (isEating) {
-            const time = now * 0.008;
-            mickeyGroup.position.set(117.4, 1.25, -3.2); // Sat on kitchen chair
-            mickeyGroup.rotation.y = Math.PI / 2; // Facing the dining table
-            legL.rotation.x = -Math.PI / 2;
-            legR.rotation.x = -Math.PI / 2;
-            // Hand feeding spoon
-            gloveR.position.y = 0.8 + Math.sin(time * 3) * 0.25;
-            gloveR.position.z = Math.cos(time * 3) * 0.15;
-            loopsGroup.visible = true;
-        } else {
-            loopsGroup.visible = false;
-        }
-
-        // 3. Bathroom Toilet Pooping
-        if (isPooping) {
-            // Sitting pos on toilet seat rotated slightly to show cheeks and front
-            mickeyGroup.position.set(77.2, 1.4, -3.5);
-            mickeyGroup.rotation.y = Math.PI / 5; 
-            legL.rotation.x = -Math.PI / 2;
-            legR.rotation.x = -Math.PI / 2;
-            // Slide shorts down
-            shortsGroup.position.y = 0.25;
-
-            // Animate poop sparkles
-            sparkles.forEach(s => {
-                s.mesh.visible = true;
-                s.mesh.position.x += s.vx;
-                s.mesh.position.y += s.vy;
-                s.mesh.position.z += s.vz;
-                s.vy -= 0.006; // gravity
-                s.age++;
-                if (s.age > 40) {
-                    // reset particle back to toilet
-                    s.mesh.position.set(77.8, 1.5, -3.5);
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 0.04 + Math.random() * 0.08;
-                    s.vx = Math.cos(angle) * speed + 0.05; // shoot forward
-                    s.vy = 0.04 + Math.random() * 0.08;
-                    s.vz = Math.sin(angle) * speed;
-                    s.age = 0;
-                }
-            });
-        } else {
-            sparkles.forEach(s => s.mesh.visible = false);
-            shortsGroup.position.y = 0.55; // reset shorts
-        }
-
-        // 4. Sleeping Bed position
-        if (isSleeping) {
-            mickeyGroup.position.set(32, 1.25, -3.5); // Sat in bed
-            mickeyGroup.rotation.z = -Math.PI / 2; // lying down flat
-            mickeyGroup.rotation.y = 0;
-            legL.rotation.x = 0; legR.rotation.x = 0;
-            headGroup.rotation.y = 0;
-            // Close eyes
-            eyeLWhite.scale.set(0.75, 0.1, 0.5);
-            eyeRWhite.scale.set(0.75, 0.1, 0.5);
-            pupilL.visible = false; pupilR.visible = false;
-        } else {
-            if (!isEating && !isPooping) {
-                mickeyGroup.rotation.z = 0; // standing upright
-            }
-            eyeLWhite.scale.set(0.75, 1.5, 0.5);
-            eyeRWhite.scale.set(0.75, 1.5, 0.5);
-            pupilL.visible = true; pupilR.visible = true;
-        }
-
-        // Default neutral bobbing if idle standing (MICKEY FACES FRONT DIRECTLY!)
-        if (!isWalking && !isDancing && !isEating && !isPooping && !isSleeping) {
-            mickeyGroup.position.y = 1.8 + Math.sin(now * 0.002) * 0.08;
-            mickeyGroup.rotation.y = 0; // Look directly at the camera / user!
-            legL.rotation.x = 0; legR.rotation.x = 0;
-            armL.rotation.z = Math.PI / 4;
-            armR.rotation.z = -Math.PI / 4;
-        }
-
-        renderer.render(scene, camera);
     }
 
-    // Trigger AI walks inside the room coordinates occasionally when idle
-    setInterval(() => {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating || activeAction !== "idle") return;
-        if (Math.random() < 0.4) {
-            targetX = -5 + Math.floor(Math.random() * 11); // Random room X target
-        }
-    }, 5000);
+    // Float text creator (+15$, +20❤️)
+    function createFloatingText(text, color = "#111827") {
+        const ft = document.createElement("div");
+        ft.className = "floating-text";
+        ft.textContent = text;
+        ft.style.color = color;
+        ft.style.left = (40 + Math.random() * 20) + "%";
+        ft.style.top = "30%";
+        lcdDisplay.appendChild(ft);
+        setTimeout(() => ft.remove(), 800);
+    }
 
-    // --- INTERACTIVE BUBBLE BUTTONS CLICK LISTENERS ---
-
-    // 1. NOURRIR BUTTON
+    // Feed action (Dollar bills!)
     btnFeed.addEventListener("click", () => {
-        if (isDead || isSleeping || activeAction !== "idle") return;
-        triggerFeedBeep();
+        if (isDead || isSleeping) return;
+        playBeep(650, 70);
+        setTimeout(() => playBeep(850, 70), 85);
 
-        activeAction = "feed";
-        actionText.textContent = "Mickey va manger dans la cuisine...";
-        activeRoomX = 120; // focus kitchen
-        targetX = 117; // dining chair position
+        // Spawn dollar bill 💵
+        const bill = document.createElement("div");
+        bill.className = "dollar-bill";
+        bill.textContent = "💵";
+        bill.style.left = (35 + Math.random() * 30) + "%";
+        bill.style.top = "10px";
+        lcdFoodContainer.appendChild(bill);
+
+        // Animate Mickey looking up and eating
+        setTimeout(() => {
+            bill.remove();
+            
+            // Eat animation
+            petWrapper.classList.remove("pet-bounce");
+            petWrapper.classList.add("pet-eating");
+            
+            // Open mouth
+            if (mickeyMouth) mickeyMouth.setAttribute("d", "M 45 74 Q 50 82 55 74");
+
+            // Stats increase
+            hunger = Math.min(100, hunger + 20);
+            createFloatingText("+20 💵", "#047857");
+            updateScreen();
+
+            setTimeout(() => {
+                petWrapper.classList.remove("pet-eating");
+                petWrapper.classList.add("pet-bounce");
+                // Close mouth back to smile
+                if (mickeyMouth) mickeyMouth.setAttribute("d", "M 40 71 Q 50 77 60 71");
+            }, 500);
+        }, 550);
     });
 
-    // 2. JOUER BUTTON
+    // Play action (Dance!)
     btnPlay.addEventListener("click", () => {
-        if (isDead || isSleeping || activeAction !== "idle") return;
-        triggerPlayBeep();
+        if (isDead || isSleeping) return;
+        playBeep(800, 60);
+        setTimeout(() => playBeep(1100, 70), 80);
 
-        activeAction = "play";
-        actionText.textContent = "Mickey va danser au salon...";
-        activeRoomX = 0;
-        targetX = 0;
+        petWrapper.classList.remove("pet-bounce");
+        petWrapper.classList.add("pet-spin");
+
+        love = Math.min(100, love + 15);
+        createFloatingText("+15 ❤️", "#b91c1c");
+        updateScreen();
+
+        setTimeout(() => {
+            petWrapper.classList.remove("pet-spin");
+            petWrapper.classList.add("pet-bounce");
+        }, 600);
     });
 
-    // 3. TOILETTE BUTTON
-    btnClean.addEventListener("click", () => {
-        if (isDead || isSleeping || activeAction !== "idle") return;
-        playBeep(450, 150);
-
-        activeAction = "clean";
-        actionText.textContent = "Mickey va au cabinet...";
-        activeRoomX = 80;
-        targetX = 77.2; // Toilet position
-    });
-
-    // 4. SOMMEIL BUTTON
+    // Sleep toggle action
     btnSleep.addEventListener("click", () => {
-        if (isDead || (activeAction !== "idle" && activeAction !== "sleep")) return;
+        if (isDead) return;
         playBeep(320, 180);
 
-        if (!isSleeping) {
-            activeAction = "sleep";
-            actionText.textContent = "Mickey va se coucher...";
-            activeRoomX = 40;
-            targetX = 32; // Bed X position
+        isSleeping = !isSleeping;
+        if (isSleeping) {
+            lcdDisplay.classList.add("dark-mode");
+            lcdSleeping.classList.remove("hidden");
+            petWrapper.classList.remove("pet-bounce");
+
+            // Close eyes (flat lines)
+            if (eyeL) eyeL.setAttribute("ry", "1");
+            if (eyeR) eyeR.setAttribute("ry", "1");
+            if (mickeyMouth) mickeyMouth.setAttribute("d", "M 46 73 Q 50 75 54 73"); // Small sleeping smile
+            
+            createFloatingText("Zzz...", "#1e3a8a");
         } else {
-            // Wake up
-            actionText.textContent = "Debout Mickey ! Le soleil se lève ! ☀️";
-            isSleeping = false;
-            // Restore lights
-            ambientLight.intensity = 0.7;
-            dirLight.intensity = 0.8;
-            activeRoomX = 0;
-            targetX = 0;
-            activeAction = "idle";
-            updateHUD();
+            lcdDisplay.classList.remove("dark-mode");
+            lcdSleeping.classList.add("hidden");
+            petWrapper.classList.add("pet-bounce");
+
+            // Open eyes
+            if (eyeL) eyeL.setAttribute("ry", "9");
+            if (eyeR) eyeR.setAttribute("ry", "9");
+            if (mickeyMouth) mickeyMouth.setAttribute("d", "M 40 71 Q 50 77 60 71"); // Big smile
+            
+            createFloatingText("Debout !", "#b45309");
         }
+        updateScreen();
     });
 
-    // Stats Decay Interval (every 1.5 seconds)
+    // Main Game Loop (runs every 1.5 seconds)
     setInterval(() => {
         if (isDead) return;
 
         if (isSleeping) {
-            sleep = Math.min(100, sleep + 6);
-            hunger = Math.max(0, hunger - 1);
-            love = Math.max(0, love - 1);
-            clean = Math.max(0, clean - 0.5);
-
-            if (sleep === 100) {
-                btnSleep.click(); // awake automatically
-            }
-        } else {
+            sleep = Math.min(100, sleep + 5);
             hunger = Math.max(0, hunger - 1.5);
             love = Math.max(0, love - 1);
-            clean = Math.max(0, clean - 2);
-            sleep = Math.max(0, sleep - 0.8);
+            
+            // Spawn little floating Zzz
+            if (Math.random() > 0.4) {
+                createFloatingText("z", "#1e3a8a");
+            }
+
+            // Wake up automatically if fully rested
+            if (sleep === 100) {
+                btnSleep.click();
+            }
+        } else {
+            hunger = Math.max(0, hunger - 2.5);
+            love = Math.max(0, love - 2);
+            sleep = Math.max(0, sleep - 1.5);
         }
 
-        if (hunger === 0 || sleep === 0 || clean === 0) {
+        // Check death conditions
+        if (hunger === 0 || sleep === 0) {
             isDead = true;
-            actionText.textContent = "☠️ Game Over ! Mickey s'est endormi pour toujours.";
-            updateHUD();
+            if (lcdDeath) lcdDeath.classList.remove("hidden");
+            if (petWrapper) petWrapper.classList.add("hidden");
+            if (lcdAlert) lcdAlert.classList.add("hidden");
+            if (lcdSleeping) lcdSleeping.classList.add("hidden");
         }
 
-        updateHUD();
+        updateScreen();
     }, 1500);
 
-    // Initial trigger render tick
-    updateHUD();
-    tick();
-
-    // Trigger loader message
-    actionText.textContent = "Monde 3D chargé ! Prenez soin de Mickey !";
+    // Initial render
+    updateScreen();
 }
 
-// Start 3D Engine on DOM loaded
+// Start Tamagotchi when DOM loaded
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initTamagotchi);
 } else {
