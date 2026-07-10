@@ -15,6 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Stylesheet -->
+    <!-- Three.js for 3D graphics rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -97,74 +99,64 @@
                 </div>
             </div>
 
-            <!-- 🎮 RETRO PIXEL TAMAGOTCHI EMULATOR -->
-            <section class="tamagotchi-section">
-                <div class="tamagotchi-container">
-                    <div class="tamagotchi-shell">
-                        <div class="tamagotchi-screen-bezel">
-                            <div class="screen-glass modern-screen">
-                                <!-- 4 Pixel-art status icons at the top -->
-                                <div class="lcd-pixel-icons">
-                                    <div class="pixel-icon-btn" id="icon-love" title="Bonheur / Coeur">
-                                        <svg viewBox="0 0 16 16" width="20" height="20">
-                                            <path d="M 4 2 L 6 2 L 6 4 L 10 4 L 10 2 L 12 2 L 12 4 L 14 4 L 14 8 L 12 8 L 12 10 L 10 10 L 10 12 L 8 12 L 8 14 L 6 14 L 6 12 L 4 12 L 4 10 L 2 10 L 2 4 L 4 4 Z" fill="#ef4444" stroke="#000" stroke-width="1.2" />
-                                            <rect x="4" y="4" width="2" height="2" fill="#fff" />
-                                        </svg>
-                                    </div>
-                                    <div class="pixel-icon-btn" id="icon-food" title="Nourrir / Poulet">
-                                        <svg viewBox="0 0 16 16" width="20" height="20">
-                                            <path d="M 2 12 L 5 9" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
-                                            <circle cx="2" cy="13" r="2" fill="#cbd5e1" stroke="#000" stroke-width="1" />
-                                            <circle cx="1" cy="11" r="2" fill="#cbd5e1" stroke="#000" stroke-width="1" />
-                                            <path d="M 6 8 C 5 6, 6 4, 9 2 C 12 1, 14 3, 14 6 C 14 9, 11 11, 8 10 Z" fill="#d97706" stroke="#000" stroke-width="1.2" />
-                                            <path d="M 9 3 C 11 3, 13 5, 12 7" stroke="#f97316" stroke-width="1" fill="none" />
-                                        </svg>
-                                    </div>
-                                    <div class="pixel-icon-btn" id="icon-clean" title="Toilette / Caca">
-                                        <svg viewBox="0 0 20 20" width="20" height="20">
-                                            <path d="M 10 2 C 10 2, 7 5, 7 7 C 7 7, 5 7, 4 9 C 3 11, 4 14, 10 14 C 16 14, 17 11, 16 9 C 15 7, 13 7, 13 7 C 13 5, 10 2, 10 2 Z" fill="#78350f" stroke="#000" stroke-width="1.2" />
-                                            <rect x="6" y="8" width="8" height="4" fill="#fff" stroke="#000" stroke-width="0.8" rx="0.5" />
-                                            <text x="6.8" y="11.2" font-size="3px" font-family="monospace" font-weight="900" fill="#000">POOP</text>
-                                        </svg>
-                                    </div>
-                                    <div class="pixel-icon-btn" id="icon-sleep" title="Sommeil / Ampoule">
-                                        <svg viewBox="0 0 16 16" width="20" height="20">
-                                            <circle cx="8" cy="7" r="5" fill="#facc15" stroke="#000" stroke-width="1.2" />
-                                            <rect x="6" y="11" width="4" height="3" fill="#64748b" stroke="#000" stroke-width="1" />
-                                            <path d="M 7 7 L 8 9 L 9 7" stroke="#000" stroke-width="0.8" fill="none" />
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <div class="lcd-display" id="lcd-display">
-                                    <!-- Low-resolution 2D gameplay canvas scaled using CSS crisp-edges -->
-                                    <canvas id="lcd-canvas" width="128" height="96"></canvas>
-
-                                    <!-- Bottom Pixel Text Display -->
-                                    <div class="pixel-bottom-text" id="pixel-bottom-text">HAPPINESS: 90%</div>
-                                </div>
+            <!-- 🎮 3D ADIBOU-STYLE MICKEY GAME -->
+            <section class="mickey-3d-section">
+                <div class="mickey-3d-card">
+                    <!-- Glassmorphic HUD overlay inside the 3D screen -->
+                    <div class="game-hud">
+                        <div class="hud-item level-badge">
+                            <span>LEVEL</span>
+                            <span id="mickey-lv" class="hud-val">5</span>
+                        </div>
+                        <div class="hud-stats">
+                            <div class="stat-bar-group" title="Faim">
+                                <span class="stat-icon">🥣</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-hunger" style="width: 80%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group" title="Bonheur">
+                                <span class="stat-icon">❤️</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-love" style="width: 80%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group" title="Hygiène">
+                                <span class="stat-icon">🧼</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-clean" style="width: 80%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group" title="Énergie">
+                                <span class="stat-icon">💡</span>
+                                <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-sleep" style="width: 80%;"></div></div>
                             </div>
                         </div>
-                        
-                        <!-- Physical Buttons -->
-                        <div class="shell-buttons">
-                            <div class="btn-group">
-                                <button id="t-btn-a" class="physical-btn btn-feed" title="Nourrir (Dollars)"></button>
-                                <span class="btn-tag">NOURRIR</span>
-                            </div>
-                            <div class="btn-group">
-                                <button id="t-btn-b" class="physical-btn btn-play" title="Jouer (Disco)"></button>
-                                <span class="btn-tag">JOUER</span>
-                            </div>
-                            <div class="btn-group">
-                                <button id="t-btn-c" class="physical-btn btn-clean" title="Toilette (Caca)"></button>
-                                <span class="btn-tag">TOILETTE</span>
-                            </div>
-                            <div class="btn-group">
-                                <button id="t-btn-d" class="physical-btn btn-sleep" title="Sommeil / Réveil"></button>
-                                <span class="btn-tag">SOMMEIL</span>
-                            </div>
+                        <div class="hud-item clock-badge">
+                            <span id="pixel-clock" class="hud-val">15:45</span>
                         </div>
+                    </div>
+
+                    <!-- WebGL Three.js Container -->
+                    <div id="canvas-3d-container"></div>
+
+                    <!-- Subtitle / Action Info Bar -->
+                    <div class="action-info-bar">
+                        <span id="action-text">Chargement du monde 3D...</span>
+                    </div>
+
+                    <!-- Floating Interactive Cartoon Buttons inside the screen -->
+                    <div class="game-ui-buttons">
+                        <button id="btn-feed-3d" class="bubble-btn feed" title="Nourrir Mickey">
+                            <span class="btn-bubble-icon">🥣</span>
+                            <span class="btn-bubble-label">NOURRIR</span>
+                        </button>
+                        <button id="btn-play-3d" class="bubble-btn play" title="Jouer avec Mickey">
+                            <span class="btn-bubble-icon">🎵</span>
+                            <span class="btn-bubble-label">JOUER</span>
+                        </button>
+                        <button id="btn-clean-3d" class="bubble-btn clean" title="Toilette Mickey">
+                            <span class="btn-bubble-icon">🧼</span>
+                            <span class="btn-bubble-label">TOILETTE</span>
+                        </button>
+                        <button id="btn-sleep-3d" class="bubble-btn sleep" title="Faire dormir Mickey">
+                            <span class="btn-bubble-icon">💡</span>
+                            <span class="btn-bubble-label">SOMMEIL</span>
+                        </button>
                     </div>
                 </div>
             </section>

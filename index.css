@@ -1120,114 +1120,180 @@ input:checked + .slider:before {
     overflow: hidden;
 }
 
-/* 📲 RETRO LCD SCREEN & CANVAS MATRIX SYSTEM */
-#lcd-canvas {
+/* 🎮 3D ADIBOU-STYLE MICKEY GAME CONTAINER */
+.mickey-3d-section {
+    margin: 24px 0;
     width: 100%;
-    height: 100%;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-crisp-edges;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    display: block;
-    background-color: #bae6fd; /* Light blue/cyan LCD screen matrix background */
+    display: flex;
+    justify-content: center;
 }
 
-/* 📲 RETRO LCD SCREEN TEXTS & LAYOUT */
-.modern-screen {
-    background: #bae6fd !important;
-    border: 4px solid #000000 !important;
-    border-radius: 8px !important;
+.mickey-3d-card {
     position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 380px;
+    background-color: #0c1e35;
+    border: 8px solid #facc15; /* Playful yellow bezel */
+    border-radius: 24px;
+    box-shadow: 
+        0 10px 0 #ca8a04,
+        0 15px 30px rgba(0,0,0,0.4);
     overflow: hidden;
 }
 
-/* Top row icons styled blocky like the image */
-.lcd-pixel-icons {
-    position: absolute;
-    top: 0;
-    left: 0;
+#canvas-3d-container {
     width: 100%;
+    height: 100%;
+    background-color: #bae6fd;
+}
+
+/* Glassmorphic Game HUD Overlay */
+.game-hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 8px 12px;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.hud-item {
+    font-family: 'Outfit', sans-serif;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.hud-val {
+    font-size: 12px;
+    color: #facc15;
+}
+
+.hud-stats {
+    display: flex;
+    gap: 8px;
+}
+
+.stat-bar-group {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 3px 6px;
+    border-radius: 8px;
+}
+
+.stat-icon {
+    font-size: 12px;
+}
+
+.stat-bar-bg {
+    width: 40px;
+    height: 6px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: #4ade80; /* energetic green */
+    transition: width 0.3s ease;
+}
+
+/* Action / Subtitle Info Banner */
+.action-info-bar {
+    position: absolute;
+    top: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.7);
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Interactive Floating UI Buttons in Screen */
+.game-ui-buttons {
+    position: absolute;
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 0 4px;
-    z-index: 20; /* Keep icons above all backgrounds */
-    border-bottom: 2px solid #000;
-    background-color: #cbd5e1; /* Light blue/grey banner background exactly like the photos */
-    height: 22px;
+    z-index: 10;
 }
 
-.pixel-icon-btn {
-    opacity: 0.45;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+.bubble-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    box-shadow: 
+        0 6px 12px rgba(0,0,0,0.2),
+        inset 0 -4px 0 rgba(0,0,0,0.15),
+        inset 0 4px 0 rgba(255,255,255,0.25);
     cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
 }
 
-.pixel-icon-btn:hover, .pixel-icon-btn.active {
-    opacity: 1;
-    transform: scale(1.15);
+.bubble-btn:hover {
+    transform: scale(1.1) translateY(-3px);
 }
 
-.pixel-icon-btn.blinking {
-    animation: pixelBlink 0.5s infinite alternate;
+.bubble-btn:active {
+    transform: scale(0.95) translateY(1px);
+    box-shadow: 
+        0 2px 4px rgba(0,0,0,0.2),
+        inset 0 -2px 0 rgba(0,0,0,0.1),
+        inset 0 2px 0 rgba(255,255,255,0.1);
 }
 
-@keyframes pixelBlink {
-    from { opacity: 0.3; }
-    to { opacity: 1; }
+.bubble-btn.feed { background: linear-gradient(135deg, #10b981, #047857); }
+.bubble-btn.play { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.bubble-btn.clean { background: linear-gradient(135deg, #a855f7, #6b21a8); }
+.bubble-btn.sleep { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+
+.btn-bubble-icon {
+    font-size: 20px;
+    margin-bottom: -2px;
 }
 
-/* Bottom Text (HAPPINESS: 90%) in a solid cyan bar */
-.pixel-bottom-text {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 18px;
-    line-height: 18px;
-    text-align: center;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 7px;
-    color: #000000;
+.btn-bubble-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8px;
     font-weight: 800;
-    text-transform: uppercase;
-    z-index: 15;
-    background-color: #93c5fd; /* Solid cyan/blue bar at the bottom of the screen */
-    border-top: 2px solid #000;
-}
-
-/* Custom Yellow Casing like the photo */
-.tamagotchi-shell {
-    background: linear-gradient(135deg, #fef08a, #facc15) !important;
-    border: 8px solid #ca8a04 !important;
-    border-radius: 40px 40px 48px 48px !important;
-    box-shadow: 
-        0 10px 0 #854d0e,
-        inset 2px 2px 5px rgba(255,255,255,0.5),
-        0 12px 20px rgba(0,0,0,0.3) !important;
-}
-
-.tamagotchi-screen-bezel {
-    background-color: #111827 !important;
-    border-color: #1f2937 !important;
-}
-
-.physical-btn {
-    box-shadow: 
-        0 3px 0 #1e293b,
-        inset 1px 1px 2px rgba(255,255,255,0.4) !important;
-}
-
-/* CRT Screen Effect overlay to mimic pixel scanlines */
-.screen-glass::after {
-    content: '';
-    position: absolute;
-    top: 22px; /* Start below the top banner */
-    left: 0;
-    width: 100%;
-    height: calc(100% - 40px); /* Fill the canvas gameplay area */
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.04));
-    background-size: 100% 3px, 6px 100%;
-    z-index: 200;
-    pointer-events: none;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
