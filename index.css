@@ -1120,264 +1120,21 @@ input:checked + .slider:before {
     overflow: hidden;
 }
 
-.scene.hidden {
-    display: none !important;
-}
-
-/* Floor lines per scene to separate wall from floor */
-.room-floor-livingroom, .room-floor-bedroom, .room-floor-kitchen, .room-floor-bathroom {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+/* 📲 RETRO LCD SCREEN & CANVAS MATRIX SYSTEM */
+#lcd-canvas {
     width: 100%;
-    height: 14px;
-    z-index: 2;
-}
-
-/* 🛋️ Scene 1: Living Room */
-#scene-livingroom {
-    background-color: #8b5cf6; /* Purple wallpaper matching photo */
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 12px, rgba(0,0,0,0.06) 12px, rgba(0,0,0,0.06) 14px);
-}
-.star-garland {
-    position: absolute;
-    top: 14px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 5px;
-    letter-spacing: 5px;
-    z-index: 2;
-    opacity: 0.85;
-}
-.room-floor-livingroom {
-    background: linear-gradient(to bottom, #d97706, #a16207); /* Wooden Floor */
-    border-top: 1.5px solid #000;
-}
-.couch-green {
-    position: absolute;
-    bottom: 12px;
-    left: 8%;
-    z-index: 3;
-}
-.armchair-orange {
-    position: absolute;
-    bottom: 12px;
-    right: 8%;
-    z-index: 3;
-}
-.painting-livingroom {
-    position: absolute;
-    top: 24px;
-    left: 28%;
-    font-size: 11px;
-    background: #fff;
-    border: 1.5px solid #000;
-    padding: 0px 2px;
-    border-radius: 1px;
-    z-index: 2;
-}
-.floor-lamp {
-    position: absolute;
-    bottom: 12px;
-    left: 48%;
-    z-index: 3;
-}
-
-/* 🛏️ Scene 2: Bedroom */
-#scene-bedroom {
-    background-color: #fef3c7; /* Warm Beige / Cream */
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(120,53,4,0.04) 8px, rgba(120,53,4,0.04) 10px);
-}
-.room-floor-bedroom {
-    background: linear-gradient(to bottom, #ca8a04, #854d0e); /* Oak wood floor */
-    border-top: 1.5px solid #000;
-}
-.bed-bedroom {
-    position: absolute;
-    bottom: 12px;
-    left: 6%;
-    z-index: 4; /* Bed frames are under Mickey */
-}
-.bed-blanket-overlay {
-    position: absolute;
-    bottom: 12px;
-    left: 6%;
-    z-index: 8; /* Blanket overlay is on top of Mickey */
-    pointer-events: none;
-}
-.clock-wall {
-    position: absolute;
-    top: 24px;
-    left: 28%;
-    z-index: 2;
-}
-.window-bedroom {
-    position: absolute;
-    top: 20px;
-    right: 14%;
-    z-index: 2;
-}
-
-/* 🧼 Scene 3: Bathroom */
-#scene-bathroom {
-    background: #ffffff;
-    background-image: linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
-    background-size: 8px 8px; /* Classic Grid Tiles */
-}
-.room-floor-bathroom {
-    background: linear-gradient(to bottom, #a5f3fc, #0ea5e9); /* Blue linoleum tiling */
-    border-top: 1.5px solid #000;
-}
-.sink-bathroom {
-    position: absolute;
-    bottom: 12px;
-    right: 8%;
-    z-index: 3;
-}
-.toilet-bathroom {
-    position: absolute;
-    bottom: 12px;
-    left: 12%;
-    z-index: 3;
-}
-
-/* 🍳 Scene 4: Kitchen */
-#scene-kitchen {
-    background: #fed7aa; /* Warm Orange/Peach Cream Wall */
-    background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
-    background-size: 100% 2px;
-}
-.room-floor-kitchen {
-    background: repeating-linear-gradient(45deg, #e2e8f0, #e2e8f0 6px, #94a3b8 6px, #94a3b8 12px); /* Chequered */
-    border-top: 1.5px solid #000;
-}
-.stove-kitchen {
-    position: absolute;
-    bottom: 12px;
-    right: 6%;
-    z-index: 3;
-}
-.cabinet-kitchen {
-    position: absolute;
-    top: 20px;
-    left: 12%;
-    z-index: 2;
-}
-.table-kitchen {
-    position: absolute;
-    bottom: 12px;
-    left: 42%;
-    z-index: 3;
-}
-.chair-kitchen {
-    position: absolute;
-    bottom: 12px;
-    left: 28%;
-    z-index: 3;
-}
-.food-bowl-kitchen {
-    position: absolute;
-    bottom: 23px;
-    left: 49%;
-    z-index: 5;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-.food-bowl-kitchen.visible {
-    opacity: 1;
-}
-
-/* 🚶‍♂️ Leg Walking Animations */
-.pet-wrapper.walking {
-    animation: walkBob 0.25s infinite alternate ease-in-out;
-}
-
-.pet-wrapper.walking #leg-l {
-    animation: walkLegL 0.25s infinite alternate ease-in-out !important;
-}
-
-.pet-wrapper.walking #leg-r {
-    animation: walkLegR 0.25s infinite alternate ease-in-out !important;
-}
-
-@keyframes walkBob {
-    from { bottom: 8px; }
-    to { bottom: 11px; }
-}
-
-@keyframes walkLegL {
-    from { transform: rotate(-25deg); }
-    to { transform: rotate(25deg); }
-}
-
-@keyframes walkLegR {
-    from { transform: rotate(25deg); }
-    to { transform: rotate(-25deg); }
-}
-
-/* 🛌 Sleeping Position (Bed) */
-.pet-wrapper.lying-down {
-    left: 12% !important;
-    bottom: 19px !important;
-    transform: rotate(-90deg) translate(-4px, 4px) scale(0.68) !important;
-    z-index: 5 !important; /* Sandwiched: under blanket overlay which is at z-index 8 */
-    animation: none !important;
-}
-
-/* 🚽 Toilet sitting position (Bathroom) */
-.pet-wrapper.sitting {
-    left: 22% !important;
-    bottom: 20px !important;
-    z-index: 5 !important;
-    transform: scaleX(1) scale(0.85) !important;
-    animation: none !important;
-}
-
-.pet-wrapper.sitting #mickey-shorts {
-    transform: translateY(12px) rotate(3deg) !important;
-}
-
-.pet-wrapper.sitting #mickey-butt {
-    display: block !important;
-}
-
-.pet-wrapper.sitting #mickey-tail {
-    transform: translateY(10px) rotate(-15deg);
-}
-
-/* 🪑 Eating sitting position (Kitchen) */
-.pet-wrapper.sitting-chair {
-    left: 27% !important;
-    bottom: 15px !important;
-    z-index: 5 !important;
-    transform: scaleX(1) scale(0.92) !important;
-    animation: none !important;
-}
-
-/* Multicolored Toilet Sparkles */
-.sparkle {
-    position: absolute;
-    font-size: 14px;
-    animation: shootSparkle 0.9s forwards cubic-bezier(0.25, 1, 0.5, 1);
-    pointer-events: none;
-    z-index: 25;
-}
-
-@keyframes shootSparkle {
-    0% {
-        transform: translate(0, 0) scale(0.5);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(var(--dx), var(--dy)) scale(1.5);
-        opacity: 0;
-    }
+    height: 100%;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
+    background-color: #bae6fd; /* Light blue/cyan LCD screen matrix background */
 }
 
 /* 📲 RETRO LCD SCREEN TEXTS & LAYOUT */
 .modern-screen {
-    background: #00e5ff !important;
+    background: #bae6fd !important;
     border: 4px solid #000000 !important;
     border-radius: 8px !important;
     position: relative;
@@ -1387,7 +1144,7 @@ input:checked + .slider:before {
 /* Top row icons styled blocky like the image */
 .lcd-pixel-icons {
     position: absolute;
-    top: 2px;
+    top: 0;
     left: 0;
     width: 100%;
     display: flex;
@@ -1395,6 +1152,9 @@ input:checked + .slider:before {
     align-items: center;
     padding: 0 4px;
     z-index: 20; /* Keep icons above all backgrounds */
+    border-bottom: 2px solid #000;
+    background-color: #cbd5e1; /* Light blue/grey banner background exactly like the photos */
+    height: 22px;
 }
 
 .pixel-icon-btn {
@@ -1417,29 +1177,14 @@ input:checked + .slider:before {
     to { opacity: 1; }
 }
 
-/* Header Text (Lv. 5 & Clock) */
-.pixel-header-text {
-    position: absolute;
-    top: 24px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 7px;
-    color: #000000;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: -0.5px;
-    z-index: 10;
-    text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
-}
-
-/* Bottom Text (HAPPINESS: 90%) */
+/* Bottom Text (HAPPINESS: 90%) in a solid cyan bar */
 .pixel-bottom-text {
     position: absolute;
-    bottom: 6px;
+    bottom: 0;
     left: 0;
     width: 100%;
+    height: 18px;
+    line-height: 18px;
     text-align: center;
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
@@ -1447,20 +1192,8 @@ input:checked + .slider:before {
     font-weight: 800;
     text-transform: uppercase;
     z-index: 15;
-    text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
-}
-
-/* Lights Out dark overlay */
-.lcd-display.dark-mode::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(10, 25, 47, 0.7);
-    z-index: 100;
-    pointer-events: none;
+    background-color: #93c5fd; /* Solid cyan/blue bar at the bottom of the screen */
+    border-top: 2px solid #000;
 }
 
 /* Custom Yellow Casing like the photo */
@@ -1489,11 +1222,11 @@ input:checked + .slider:before {
 .screen-glass::after {
     content: '';
     position: absolute;
-    top: 0;
+    top: 22px; /* Start below the top banner */
     left: 0;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+    height: calc(100% - 40px); /* Fill the canvas gameplay area */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.04));
     background-size: 100% 3px, 6px 100%;
     z-index: 200;
     pointer-events: none;

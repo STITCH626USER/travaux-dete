@@ -771,6 +771,7 @@ function initTamagotchi() {
     let isDancing = false;
     let isPooping = false;
     let isEating = false;
+    let walkFrame = 0;
 
     // DOM Elements
     const iconLove = document.getElementById("icon-love");
@@ -779,44 +780,37 @@ function initTamagotchi() {
     const iconSleep = document.getElementById("icon-sleep");
 
     const lcdDisplay = document.getElementById("lcd-display");
-    const petWrapper = document.getElementById("pet-wrapper");
-    const mickeyMouth = document.getElementById("mickey-mouth");
-    const eyeL = document.getElementById("m-eye-l");
-    const eyeR = document.getElementById("m-eye-r");
-    const lcdSleeping = document.getElementById("lcd-sleeping-indicator");
-    const lcdDeath = document.getElementById("lcd-death");
-    const lcdAlert = document.getElementById("lcd-alert");
-    const lcdFoodContainer = document.getElementById("lcd-food-container");
-    const lcdSparkleContainer = document.getElementById("lcd-sparkle-container");
-    const discoBall = document.getElementById("disco-ball");
-    const mickeyLv = document.getElementById("mickey-lv");
+    const canvas = document.getElementById("lcd-canvas");
+    const ctx = canvas.getContext("2d");
     const pixelBottomText = document.getElementById("pixel-bottom-text");
     const pixelClock = document.getElementById("pixel-clock");
-
-    // Scenes DOM elements
-    const sceneLivingroom = document.getElementById("scene-livingroom");
-    const sceneBedroom = document.getElementById("scene-bedroom");
-    const sceneBathroom = document.getElementById("scene-bathroom");
-    const sceneKitchen = document.getElementById("scene-kitchen");
-    const foodBowlKitchen = document.getElementById("food-bowl-kitchen");
+    const mickeyLv = document.getElementById("mickey-lv");
 
     const btnFeed = document.getElementById("t-btn-a");
     const btnPlay = document.getElementById("t-btn-b");
     const btnClean = document.getElementById("t-btn-c");
     const btnSleep = document.getElementById("t-btn-d");
 
-    if (!iconLove || !iconFood || !iconClean || !iconSleep) {
-        console.warn("Tamagotchi pixel icons missing!");
+    if (!iconLove || !iconFood || !iconClean || !iconSleep || !canvas) {
+        console.warn("Tamagotchi elements missing!");
         return;
     }
 
-    // Set transitions on pet-wrapper for smooth HTML movement
-    petWrapper.style.transition = "left 1s linear, transform 0.2s ease, bottom 0.2s ease";
+    // Active Scene: "livingroom" (default), "bedroom", "bathroom", "kitchen"
+    let currentScene = "livingroom";
 
-    // Start with Mickey bouncing
-    petWrapper.classList.add("pet-bounce");
+    // 2D Game Coordinates for Mickey Mouse
+    let mickeyX = 64; // Center of screen
+    let targetX = 64;
+    let walkSpeed = 2; // Pixels per frame update
+    let mickeyDirection = 1; // 1 = facing right, -1 = facing left
+    let animFrame = 0; // Alternates for walking/dancing/eating/pooping cycles
+    let walkCallback = null;
 
-    // Helper to generate retro beep sounds
+    // Sparkles particle system for Poop scene
+    let poopSparkles = [];
+
+    // Audio click feedback beeps (Web Audio API)
     function playBeep(frequency = 800, duration = 80) {
         try {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -828,7 +822,7 @@ function initTamagotchi() {
             oscillator.type = "sine";
             oscillator.frequency.value = frequency;
             
-            gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
 
             oscillator.connect(gainNode);
@@ -837,91 +831,578 @@ function initTamagotchi() {
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + duration / 1000);
         } catch (e) {
-            console.warn("Audio Context beep blocked or unsupported:", e);
+            console.warn("Beep audio blocked:", e);
         }
     }
 
-    // Helper to switch scenes
-    function showScene(sceneId) {
-        if (sceneLivingroom) sceneLivingroom.classList.add("hidden");
-        if (sceneBedroom) sceneBedroom.classList.add("hidden");
-        if (sceneBathroom) sceneBathroom.classList.add("hidden");
-        if (sceneKitchen) sceneKitchen.classList.add("hidden");
-
-        if (sceneId === "livingroom" && sceneLivingroom) sceneLivingroom.classList.remove("hidden");
-        else if (sceneId === "bedroom" && sceneBedroom) sceneBedroom.classList.remove("hidden");
-        else if (sceneId === "bathroom" && sceneBathroom) sceneBathroom.classList.remove("hidden");
-        else if (sceneId === "kitchen" && sceneKitchen) sceneKitchen.classList.remove("hidden");
+    // Helper to draw clean retro shapes on low-resolution canvas context
+    function drawRect(x, y, w, h, fill, stroke = "#000000", strokeWidth = 1) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x, y, w, h);
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = strokeWidth;
+            ctx.strokeRect(x, y, w, h);
+        }
     }
 
-    // Digital clock updater
-    function updateClock() {
-        const now = new Date();
-        const hrs = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
-        if (pixelClock) pixelClock.textContent = `${hrs}:${mins}`;
+    function drawCircle(cx, cy, r, fill, stroke = "#000000", strokeWidth = 1) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = strokeWidth;
+            ctx.stroke();
+        }
     }
-    setInterval(updateClock, 1000);
-    updateClock();
 
-    // Update screen UI and highlight top row icons based on stats
-    function updateScreen() {
-        if (mickeyLv) mickeyLv.textContent = level;
+    function drawEllipse(cx, cy, rx, ry, fill, stroke = "#000000", strokeWidth = 1) {
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = strokeWidth;
+            ctx.stroke();
+        }
+    }
 
-        // Love Icon
-        if (love <= 25) {
-            iconLove.classList.add("active", "blinking");
+    // Main 2D Render Loop (conforms to visual look of the 4 photos)
+    function renderGame() {
+        // Clear Canvas
+        ctx.fillStyle = "#bae6fd"; // Matrix Screen base color
+        ctx.fillRect(0, 0, 128, 96);
+
+        if (isDead) {
+            // Draw RIP Tombstone
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, 22, 128, 56);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "8px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText("☠️ GAME OVER", 64, 46);
+            ctx.fillText("RIP MICKEY", 64, 58);
+            return;
+        }
+
+        // DRAW ACTIVE SCENE BACKDROP
+        if (currentScene === "livingroom") {
+            // Wall purple wall wallpaper with vertical stripe panels
+            ctx.fillStyle = "#8b5cf6";
+            ctx.fillRect(0, 22, 128, 44);
+            ctx.strokeStyle = "rgba(0,0,0,0.06)";
+            ctx.lineWidth = 1;
+            for (let sx = 6; sx < 128; sx += 12) {
+                ctx.beginPath();
+                ctx.moveTo(sx, 22);
+                ctx.lineTo(sx, 66);
+                ctx.stroke();
+            }
+
+            // Star Garland at top of wallpaper
+            ctx.fillStyle = "#facc15";
+            for (let starX = 20; starX < 120; starX += 16) {
+                ctx.fillRect(starX, 30, 2, 2);
+                ctx.fillRect(starX - 1, 31, 4, 1);
+            }
+
+            // Floor wood brown
+            drawRect(0, 66, 128, 12, "#d97706", "#78350f", 1);
+
+            // Floor Lamp
+            ctx.beginPath();
+            ctx.moveTo(85, 34);
+            ctx.lineTo(85, 68);
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            drawCircle(85, 68, 4, "#000000", null);
+            // Lampshade yellow
+            ctx.fillStyle = "#facc15";
+            ctx.beginPath();
+            ctx.moveTo(80, 36);
+            ctx.lineTo(90, 36);
+            ctx.lineTo(87, 28);
+            ctx.lineTo(83, 28);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#000000";
+            ctx.stroke();
+
+            // Couch Green
+            drawRect(6, 48, 30, 18, "#22c55e", "#000000", 1);
+            drawRect(8, 46, 26, 6, "#15803d", "#000000", 1);
+            drawRect(4, 52, 4, 14, "#15803d", "#000000", 1);
+            drawRect(34, 52, 4, 14, "#15803d", "#000000", 1);
+
+            // Armchair Orange
+            drawRect(102, 48, 20, 18, "#f97316", "#000000", 1);
+            drawRect(104, 46, 16, 6, "#c2410c", "#000000", 1);
+            drawRect(100, 52, 4, 14, "#c2410c", "#000000", 1);
+            drawRect(120, 52, 4, 14, "#c2410c", "#000000", 1);
+
+            // Disco Ball & light rays
+            if (isDancing) {
+                // Ball
+                drawCircle(64, 28, 6, "#cbd5e1", "#475569", 1);
+                ctx.beginPath();
+                ctx.moveTo(64, 22);
+                ctx.lineTo(64, 25);
+                ctx.stroke();
+                // Alternating Disco Light beams
+                ctx.fillStyle = animFrame % 2 === 0 ? "rgba(255, 255, 0, 0.15)" : "rgba(255, 0, 255, 0.15)";
+                ctx.beginPath();
+                ctx.moveTo(64, 28);
+                ctx.lineTo(10, 66);
+                ctx.lineTo(40, 66);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(64, 28);
+                ctx.lineTo(118, 66);
+                ctx.lineTo(88, 66);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+        } else if (currentScene === "bedroom") {
+            // Wall beige with fine vertical stripes
+            ctx.fillStyle = "#fef3c7";
+            ctx.fillRect(0, 22, 128, 44);
+            ctx.strokeStyle = "rgba(120,53,4,0.05)";
+            ctx.lineWidth = 1;
+            for (let sx = 8; sx < 128; sx += 8) {
+                ctx.beginPath();
+                ctx.moveTo(sx, 22);
+                ctx.lineTo(sx, 66);
+                ctx.stroke();
+            }
+
+            // Floor oak wood
+            drawRect(0, 66, 128, 12, "#ca8a04", "#854d0e", 1);
+
+            // Wall Clock on Left
+            drawCircle(20, 36, 6, "#ffffff", "#000000", 1);
+            ctx.beginPath();
+            ctx.moveTo(20, 36);
+            ctx.lineTo(20, 32);
+            ctx.moveTo(20, 36);
+            ctx.lineTo(23, 36);
+            ctx.strokeStyle = "#000000";
+            ctx.stroke();
+
+            // Window with Curtains
+            drawRect(90, 26, 24, 30, "#bae6fd", "#000000", 1);
+            // Grid lines
+            ctx.beginPath();
+            ctx.moveTo(102, 26); ctx.lineTo(102, 56);
+            ctx.moveTo(90, 41); ctx.lineTo(114, 41);
+            ctx.strokeStyle = "#475569";
+            ctx.stroke();
+            // Blue Curtains
+            drawRect(90, 26, 4, 30, "#3b82f6", "#000000", 1);
+            drawRect(110, 26, 4, 30, "#3b82f6", "#000000", 1);
+
+            // Wooden Bed base (drawn under Mickey)
+            drawRect(6, 48, 4, 22, "#78350f", "#000000", 1); // Headboard
+            drawRect(44, 56, 4, 14, "#78350f", "#000000", 1); // Footboard
+            drawRect(10, 58, 34, 10, "#78350f", "#000000", 1); // Frame
+            drawRect(10, 54, 34, 4, "#ffffff", "#94a3b8", 1); // Mattress
+            drawRect(12, 50, 8, 4, "#e2e8f0", "#94a3b8", 1); // Pillow
+
+        } else if (currentScene === "bathroom") {
+            // White tiled wall grid
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 22, 128, 44);
+            ctx.strokeStyle = "rgba(14,165,233,0.06)";
+            ctx.lineWidth = 1;
+            for (let sx = 8; sx < 128; sx += 8) {
+                ctx.beginPath();
+                ctx.moveTo(sx, 22); ctx.lineTo(sx, 66);
+                ctx.stroke();
+            }
+            for (let sy = 22; sy < 66; sy += 8) {
+                ctx.beginPath();
+                ctx.moveTo(0, sy); ctx.lineTo(128, sy);
+                ctx.stroke();
+            }
+
+            // Floor blue tiles
+            drawRect(0, 66, 128, 12, "#a5f3fc", "#0ea5e9", 1);
+
+            // Sink and Mirror
+            drawRect(104, 48, 4, 20, "#cbd5e1", "#000000", 1); // Column
+            drawRect(98, 42, 16, 6, "#ffffff", "#000000", 1); // Bowl
+            // Mirror
+            drawRect(100, 24, 12, 14, "#bae6fd", "#000000", 1);
+
+            // Toilet bowl (drawn behind sitting Mickey)
+            drawRect(12, 38, 12, 28, "#ffffff", "#000000", 1); // Tank
+            drawRect(24, 48, 16, 18, "#ffffff", "#000000", 1); // Bowl base
+            drawEllipse(32, 48, 8, 3, "#ffffff", "#000000", 1); // Seat ring
+
+            // Poop Sparkles explosion
+            if (isPooping) {
+                poopSparkles.forEach(s => {
+                    ctx.fillStyle = s.color;
+                    ctx.fillRect(s.x, s.y, 2.5, 2.5);
+                });
+            }
+
+        } else if (currentScene === "kitchen") {
+            // Peach wallpaper
+            ctx.fillStyle = "#fed7aa";
+            ctx.fillRect(0, 22, 128, 44);
+            ctx.strokeStyle = "rgba(0,0,0,0.04)";
+            ctx.lineWidth = 1;
+            for (let sx = 10; sx < 128; sx += 10) {
+                ctx.beginPath();
+                ctx.moveTo(sx, 22); ctx.lineTo(sx, 66);
+                ctx.stroke();
+            }
+
+            // Floor Checkered tile
+            ctx.fillStyle = "#e2e8f0";
+            ctx.fillRect(0, 66, 128, 12);
+            ctx.fillStyle = "#94a3b8";
+            for (let tx = 0; tx < 128; tx += 12) {
+                ctx.fillRect(tx + (animFrame % 2 === 0 ? 0 : 6), 66, 6, 6);
+                ctx.fillRect(tx + (animFrame % 2 === 0 ? 6 : 0), 72, 6, 6);
+            }
+            ctx.strokeStyle = "#000000";
+            ctx.beginPath();
+            ctx.moveTo(0, 66); ctx.lineTo(128, 66);
+            ctx.stroke();
+
+            // Cabinet
+            drawRect(6, 26, 24, 20, "#a16207", "#000000", 1);
+            ctx.beginPath();
+            ctx.moveTo(18, 26); ctx.lineTo(18, 46);
+            ctx.stroke();
+
+            // Stove oven
+            drawRect(98, 42, 24, 24, "#cbd5e1", "#000000", 1);
+            drawRect(102, 48, 16, 12, "#475569", "#000000", 1); // door
+
+            // Table & Chair
+            drawRect(60, 52, 4, 14, "#78350f", "#000000", 1); // Leg
+            drawEllipse(62, 52, 16, 3, "#a16207", "#000000", 1); // Top
+
+            drawRect(34, 44, 3, 22, "#78350f", "#000000", 1); // Backrest
+            drawRect(34, 52, 10, 2, "#a16207", "#000000", 1); // Seat
+            drawRect(41, 54, 2, 12, "#78350f", "#000000", 1); // Leg
+
+            // Blue bowl on table
+            if (isEating) {
+                drawRect(56, 48, 8, 4, "#3b82f6", "#000000", 1);
+                // Loops cereal dots
+                ctx.fillStyle = "#ef4444"; ctx.fillRect(57, 47, 1.5, 1.5);
+                ctx.fillStyle = "#facc15"; ctx.fillRect(59, 46.5, 1.5, 1.5);
+                ctx.fillStyle = "#22c55e"; ctx.fillRect(61, 47, 1.5, 1.5);
+            }
+        }
+
+        // DRAW CHARACTER MICKEY MOUSE (Low-res 2D Sprite alignment)
+        let posture = "idle";
+        if (isSleeping) posture = "sleep";
+        else if (isPooping) posture = "poop";
+        else if (isEating) posture = "eat";
+        else if (isDancing) posture = animFrame % 2 === 0 ? "dance1" : "dance2";
+        else if (isWalking) posture = walkFrame === 0 ? "walk1" : "walk2";
+
+        drawMickeyPixel(mickeyX, 66, posture, mickeyDirection);
+
+        // Blanket Overlay (drawn on top of Mickey when sleeping)
+        if (currentScene === "bedroom" && isSleeping) {
+            drawRect(20, 54, 26, 12, "#3b82f6", "#000000", 1);
+        }
+
+        // Alerts dark screen dimmer (SOMMEIL mode)
+        if (isSleeping && currentScene === "bedroom") {
+            ctx.fillStyle = "rgba(10, 25, 47, 0.65)";
+            ctx.fillRect(0, 22, 128, 56);
+        }
+    }
+
+    // 2D Pixelated Mickey Mouse Draw Engine
+    function drawMickeyPixel(x, y, posture, direction) {
+        ctx.save();
+        
+        // Horizontal flip adjustment if facing left
+        if (direction === -1) {
+            ctx.translate(x * 2, 0);
+            ctx.scale(-1, 1);
+            x = x;
+        }
+
+        if (posture === "sleep") {
+            // Rotation flat coordinates
+            let headX = 18;
+            let bodyX = 28;
+            let legX = 38;
+            let sleepY = 56;
+
+            // Tail
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bodyX + 2, sleepY + 4);
+            ctx.quadraticCurveTo(bodyX + 6, sleepY + 10, bodyX + 12, sleepY + 6);
+            ctx.stroke();
+
+            // Shoes Yellow
+            drawEllipse(legX + 6, sleepY, 4, 3, "#facc15", "#000000", 1);
+            drawEllipse(legX + 6, sleepY + 4, 4, 3, "#facc15", "#000000", 1);
+
+            // Legs
+            drawRect(bodyX + 4, sleepY, 4, 1.5, "#000000", null);
+            drawRect(bodyX + 4, sleepY + 4, 4, 1.5, "#000000", null);
+
+            // Body
+            drawEllipse(bodyX, sleepY + 2, 6, 5, "#000000", "#000000", 1);
+
+            // Shorts Red
+            drawRect(bodyX - 2, sleepY - 2, 5, 8, "#ef4444", "#000000", 1);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(bodyX - 1, sleepY + 1, 1, 2);
+
+            // Arms white glove
+            drawCircle(bodyX - 4, sleepY + 5, 2, "#ffffff", "#000000", 1);
+
+            // Head & Ears
+            drawCircle(headX, sleepY + 2, 6, "#000000", "#000000", 1);
+            drawCircle(headX - 3, sleepY - 4, 3.5, "#000000", "#000000", 1); // Ear
+            drawCircle(headX + 3, sleepY - 4, 3.5, "#000000", "#000000", 1); // Ear
+
+            // Face mask cream
+            drawEllipse(headX + 1, sleepY + 2, 4, 3, "#ede6d5", null);
+            drawCircle(headX - 1, sleepY + 1, 2.5, "#ede6d5", null);
+            drawCircle(headX - 1, sleepY + 3, 2.5, "#ede6d5", null);
+
+            // Sleep Eyes closed horizontal bars
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(headX - 2, sleepY + 1); ctx.lineTo(headX, sleepY + 1);
+            ctx.moveTo(headX - 2, sleepY + 3); ctx.lineTo(headX, sleepY + 3);
+            ctx.stroke();
+
+            // Nose
+            drawCircle(headX + 4, sleepY + 2, 1.2, "#000000", null);
+
+        } else if (posture === "poop") {
+            // Sitting on toilet facing right
+            let sitX = 35;
+            let sitY = 56;
+
+            // Bare butt cheeks
+            drawCircle(sitX - 4, sitY + 2, 3, "#000000", "#000000", 1);
+            drawCircle(sitX - 1, sitY + 2, 3, "#000000", "#000000", 1);
+
+            // Red shorts down to ankles
+            drawRect(sitX - 4, sitY + 8, 8, 4, "#ef4444", "#000000", 1);
+
+            // Yellow shoes
+            drawEllipse(sitX + 2, sitY + 11, 4.5, 2.5, "#facc15", "#000000", 1);
+
+            // Torso
+            drawEllipse(sitX - 1, sitY - 4, 5, 6, "#000000", "#000000", 1);
+
+            // Wiggling waving hands
+            drawCircle(sitX + 4, sitY - 2, 2, "#ffffff", "#000000", 1);
+
+            // Head and Ears
+            drawCircle(sitX, sitY - 14, 6, "#000000", "#000000", 1);
+            drawCircle(sitX - 4, sitY - 20, 4, "#000000", "#000000", 1);
+            drawCircle(sitX + 4, sitY - 20, 4, "#000000", "#000000", 1);
+
+            // Face cheeks cream
+            drawEllipse(sitX + 1, sitY - 13, 3.5, 2.8, "#ede6d5", null);
+            drawCircle(sitX - 1, sitY - 14, 2.2, "#ede6d5", null);
+            drawCircle(sitX - 1, sitY - 12, 2.2, "#ede6d5", null);
+
+            // Face outline chin
+            ctx.beginPath();
+            ctx.arc(sitX, sitY - 14, 6, 0.2, Math.PI - 0.2);
+            ctx.strokeStyle = "#000000";
+            ctx.stroke();
+
+            // Eyes open wiggling
+            drawEllipse(sitX + 1, sitY - 15, 1, 2, "#ffffff", "#000000", 0.8);
+            drawEllipse(sitX + 1, sitY - 11, 1, 2, "#ffffff", "#000000", 0.8);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(sitX + 1.2, sitY - 14.5, 0.8, 1);
+            ctx.fillRect(sitX + 1.2, sitY - 10.5, 0.8, 1);
+
+            // Snout / Nose
+            drawCircle(sitX + 4, sitY - 13, 1.2, "#000000", null);
+
+            // Mouth
+            ctx.strokeStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(sitX + 2, sitY - 13, 2, -1, 1);
+            ctx.stroke();
+
+        } else if (posture === "eat") {
+            // Sitting on chair facing right
+            let sitX = 43;
+            let sitY = 56;
+
+            // Torso
+            drawEllipse(sitX - 4, sitY - 2, 5, 6, "#000000", "#000000", 1);
+
+            // Red shorts
+            drawRect(sitX - 8, sitY + 2, 7, 5, "#ef4444", "#000000", 1);
+            // Yellow shoes
+            drawEllipse(sitX - 2, sitY + 11, 4.5, 2.5, "#facc15", "#000000", 1);
+
+            // Spoon hand waving/eating loop
+            let spoonOffset = animFrame % 2 === 0 ? -3 : 1;
+            drawCircle(sitX + 3, sitY - 2 + spoonOffset, 2, "#ffffff", "#000000", 1);
+            // Spoon line
+            ctx.strokeStyle = "#64748b";
+            ctx.beginPath();
+            ctx.moveTo(sitX + 5, sitY - 2 + spoonOffset);
+            ctx.lineTo(sitX + 9, sitY - 5 + spoonOffset);
+            ctx.stroke();
+
+            // Head and Ears
+            drawCircle(sitX, sitY - 12, 6, "#000000", "#000000", 1);
+            drawCircle(sitX - 4, sitY - 18, 4, "#000000", "#000000", 1);
+            drawCircle(sitX + 4, sitY - 18, 4, "#000000", "#000000", 1);
+
+            // Face cheeks cream
+            drawEllipse(sitX + 1, sitY - 11, 3.5, 2.8, "#ede6d5", null);
+            drawCircle(sitX - 1, sitY - 12, 2.2, "#ede6d5", null);
+            drawCircle(sitX - 1, sitY - 10, 2.2, "#ede6d5", null);
+
+            // Eyes
+            drawEllipse(sitX + 1, sitY - 13, 1, 2, "#ffffff", "#000000", 0.8);
+            drawEllipse(sitX + 1, sitY - 9, 1, 2, "#ffffff", "#000000", 0.8);
+
+            // Nose
+            drawCircle(sitX + 4, sitY - 11, 1.2, "#000000", null);
+
+            // Chewing open mouth if frame % 2 === 0
+            if (animFrame % 2 === 0) {
+                drawCircle(sitX + 2, sitY - 11, 1.5, "#be123c", "#000000", 1);
+            } else {
+                ctx.strokeStyle = "#000000";
+                ctx.beginPath();
+                ctx.arc(sitX + 2, sitY - 11, 2, -1, 1);
+                ctx.stroke();
+            }
+
         } else {
-            iconLove.classList.remove("active", "blinking");
+            // Default postures: "idle", "walk1", "walk2", "dance1", "dance2"
+            let bobY = 0;
+            if (posture === "walk1" || posture === "dance1") bobY = -1.5;
+
+            // Tail
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y - 10 + bobY);
+            ctx.quadraticCurveTo(x - 12, y - 5 + bobY, x - 15, y - 12 + bobY);
+            ctx.stroke();
+
+            // Shoes Yellow
+            let leftShoeY = y - 2;
+            let rightShoeY = y - 2;
+            if (posture === "walk1") leftShoeY -= 2;
+            if (posture === "walk2") rightShoeY -= 2;
+
+            drawEllipse(x - 5, leftShoeY, 5, 3.2, "#facc15", "#000000", 1);
+            drawEllipse(x + 5, rightShoeY, 5, 3.2, "#facc15", "#000000", 1);
+
+            // Legs
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y - 10 + bobY); ctx.lineTo(x - 4, leftShoeY - 1);
+            ctx.moveTo(x + 3, y - 10 + bobY); ctx.lineTo(x + 4, rightShoeY - 1);
+            ctx.stroke();
+
+            // Torso
+            drawEllipse(x, y - 15 + bobY, 6, 8, "#000000", "#000000", 1);
+
+            // Shorts Red
+            drawEllipse(x, y - 11 + bobY, 6.2, 4.2, "#ef4444", "#000000", 1);
+            // Oval buttons white
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(x - 2, y - 12 + bobY, 1, 2.2);
+            ctx.fillRect(x + 1, y - 12 + bobY, 1, 2.2);
+
+            // Head and Ears
+            drawCircle(x, y - 25 + bobY, 6.5, "#000000", "#000000", 1);
+            drawCircle(x - 6, y - 31 + bobY, 4.5, "#000000", "#000000", 1);
+            drawCircle(x + 6, y - 31 + bobY, 4.5, "#000000", "#000000", 1);
+
+            // Face cheeks cream
+            drawEllipse(x, y - 24 + bobY, 4.2, 3, "#ede6d5", null);
+            drawCircle(x - 2, y - 25 + bobY, 2.5, "#ede6d5", null);
+            drawCircle(x + 2, y - 25 + bobY, 2.5, "#ede6d5", null);
+
+            // Eyes pie-eyes
+            drawEllipse(x - 2, y - 27 + bobY, 1.2, 2.5, "#ffffff", "#000000", 0.8);
+            drawEllipse(x + 2, y - 27 + bobY, 1.2, 2.5, "#ffffff", "#000000", 0.8);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(x - 2, y - 26.5 + bobY, 1, 1.5);
+            ctx.fillRect(x + 1.8, y - 26.5 + bobY, 1, 1.5);
+
+            // Chin outline
+            ctx.beginPath();
+            ctx.arc(x, y - 25 + bobY, 6.5, 0.2, Math.PI - 0.2);
+            ctx.strokeStyle = "#000000";
+            ctx.stroke();
+
+            // Snout / Nose
+            drawCircle(x, y - 23 + bobY, 1.5, "#000000", null);
+
+            // Mouth
+            drawCircle(x, y - 22 + bobY, 2, "#be123c", "#000000", 1);
+            ctx.strokeStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(x, y - 22.5 + bobY, 2.5, -0.2, Math.PI + 0.2);
+            ctx.stroke();
+
+            // ARMS & HANDS
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 2.2;
+            if (posture === "dance1") {
+                // Dance pose 1: arms diagonal pointing up left, down right
+                ctx.beginPath();
+                ctx.moveTo(x - 5, y - 18 + bobY); ctx.lineTo(x - 12, y - 26 + bobY);
+                ctx.moveTo(x + 5, y - 18 + bobY); ctx.lineTo(x + 12, y - 10 + bobY);
+                ctx.stroke();
+                drawCircle(x - 12, y - 26 + bobY, 2, "#ffffff", "#000000", 1);
+                drawCircle(x + 12, y - 10 + bobY, 2, "#ffffff", "#000000", 1);
+
+            } else if (posture === "dance2") {
+                // Dance pose 2: arms diagonal pointing down left, up right
+                ctx.beginPath();
+                ctx.moveTo(x - 5, y - 18 + bobY); ctx.lineTo(x - 12, y - 10 + bobY);
+                ctx.moveTo(x + 5, y - 18 + bobY); ctx.lineTo(x + 12, y - 26 + bobY);
+                ctx.stroke();
+                drawCircle(x - 12, y - 10 + bobY, 2, "#ffffff", "#000000", 1);
+                drawCircle(x + 12, y - 26 + bobY, 2, "#ffffff", "#000000", 1);
+
+            } else {
+                // Default: Waving left arm raised high, right arm lowered
+                ctx.beginPath();
+                ctx.moveTo(x - 5, y - 18 + bobY); ctx.lineTo(x - 11, y - 12 + bobY); // arm lowered
+                ctx.moveTo(x + 5, y - 18 + bobY); ctx.lineTo(x + 12, y - 28 + bobY); // arm waving up
+                ctx.stroke();
+                drawCircle(x - 11, y - 12 + bobY, 2, "#ffffff", "#000000", 1);
+                drawCircle(x + 12, y - 28 + bobY, 2, "#ffffff", "#000000", 1);
+            }
         }
 
-        // Food Icon
-        if (hunger <= 25) {
-            iconFood.classList.add("active", "blinking");
-            lcdAlert.classList.remove("hidden");
-        } else {
-            iconFood.classList.remove("active", "blinking");
-            lcdAlert.classList.add("hidden");
-        }
-
-        // Clean Icon
-        if (clean <= 25) {
-            iconClean.classList.add("active", "blinking");
-        } else {
-            iconClean.classList.remove("active", "blinking");
-        }
-
-        // Sleep Icon
-        if (sleep <= 25) {
-            iconSleep.classList.add("active", "blinking");
-        } else {
-            iconSleep.classList.remove("active", "blinking");
-        }
-    }
-
-    // Floating text feedback (stats etc)
-    function createFloatingText(text, color = "#111827") {
-        const ft = document.createElement("div");
-        ft.className = "floating-text";
-        ft.textContent = text;
-        ft.style.color = color;
-        ft.style.left = (parseFloat(petWrapper.style.left) || 40) + "%";
-        ft.style.top = "35%";
-        ft.style.fontFamily = "'Press Start 2P', monospace";
-        ft.style.fontSize = "6px";
-        ft.style.textShadow = "1px 1px 0 #fff";
-        lcdDisplay.appendChild(ft);
-        setTimeout(() => ft.remove(), 800);
-    }
-
-    // Experience leveling up
-    function gainExp() {
-        exp += 1;
-        if (exp >= 5) {
-            exp = 0;
-            level += 1;
-            createFloatingText("LEVEL UP! 🎉", "#7c3aed");
-        }
+        ctx.restore();
     }
 
     // Cycle bottom text display
@@ -963,95 +1444,97 @@ function initTamagotchi() {
         
         cycleIndex = (cycleIndex + 1) % statusCycle.length;
     }
-    
-    // Run bottom text cycle every 2.5 seconds
-    setInterval(updateBottomText, 2500);
 
-    // Path walking logic
-    function walkTo(targetLeftPct, callback) {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) {
-            if (callback) callback(false);
-            return;
-        }
+    // Walking / Animation loop (runs at 8fps = 125ms per frame)
+    let animationTimer = setInterval(() => {
+        if (isDead) return;
 
-        isWalking = true;
-        const currentLeft = parseFloat(petWrapper.style.left) || 40;
-        const delta = targetLeftPct - currentLeft;
+        animFrame++;
 
-        // Set direction (scaleX)
-        if (delta < 0) {
-            petWrapper.style.transform = "scaleX(-1)";
+        // Update toilet sparkles
+        if (isPooping) {
+            if (poopSparkles.length < 15) {
+                const colors = ["#ff007f", "#00ffff", "#39ff14", "#ff00ff", "#ffff00", "#ff7f00"];
+                poopSparkles.push({
+                    x: 36,
+                    y: 52,
+                    vx: 2 + Math.random() * 4,
+                    vy: -2 + Math.random() * 4 - 2,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+            poopSparkles.forEach(s => {
+                s.x += s.vx;
+                s.y += s.vy;
+                s.vy += 0.2; // gravity
+            });
+            poopSparkles = poopSparkles.filter(s => s.x < 110 && s.y < 78);
         } else {
-            petWrapper.style.transform = "scaleX(1)";
+            poopSparkles = [];
         }
 
-        petWrapper.classList.remove("pet-bounce");
-        petWrapper.classList.add("walking");
-
-        // Calculate travel time based on distance (35ms per percent)
-        const duration = Math.abs(delta) * 35;
-        petWrapper.style.transition = `left ${duration}ms linear, transform 0.2s ease, bottom 0.2s ease`;
-        
-        // Trigger position update
-        petWrapper.style.left = targetLeftPct + "%";
-
-        setTimeout(() => {
-            petWrapper.classList.remove("walking");
+        // Handle walking movement
+        if (mickeyX !== targetX) {
+            isWalking = true;
+            const dist = targetX - mickeyX;
+            mickeyDirection = dist > 0 ? 1 : -1;
+            if (Math.abs(dist) <= walkSpeed) {
+                mickeyX = targetX;
+                isWalking = false;
+                if (walkCallback) {
+                    const cb = walkCallback;
+                    walkCallback = null;
+                    cb(true);
+                }
+            } else {
+                mickeyX += mickeyDirection * walkSpeed;
+            }
+        } else {
             isWalking = false;
-            
-            // Restore default posture if no other state active
-            if (!isSleeping && !isDancing && !isPooping && !isEating) {
-                petWrapper.classList.add("pet-bounce");
-            }
-            if (callback) callback(true);
-        }, duration);
+        }
+
+        // Draw the frame
+        renderGame();
+    }, 125);
+
+    // AI Walking logic (triggers target changes periodically)
+    let aiTimer = setInterval(() => {
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        
+        // 35% chance to walk
+        if (Math.random() < 0.35) {
+            targetX = 40 + Math.floor(Math.random() * 48); // Walk in middle range
+        }
+    }, 4500);
+
+    // Stats updates screen indicators
+    function updateScreen() {
+        if (mickeyLv) mickeyLv.textContent = level;
+
+        // Blinking indicators on top bar based on low stats
+        if (love <= 25) iconLove.classList.add("active", "blinking");
+        else iconLove.classList.remove("active", "blinking");
+
+        if (hunger <= 25) iconFood.classList.add("active", "blinking");
+        else iconFood.classList.remove("active", "blinking");
+
+        if (clean <= 25) iconClean.classList.add("active", "blinking");
+        else iconClean.classList.remove("active", "blinking");
+
+        if (sleep <= 25) iconSleep.classList.add("active", "blinking");
+        else iconSleep.classList.remove("active", "blinking");
     }
 
-    // Walking AI: random walks when idle
-    let aiTimer = null;
-    function runWalkingAI() {
-        if (aiTimer) clearInterval(aiTimer);
-        aiTimer = setInterval(() => {
-            if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
-            
-            // 35% chance to walk somewhere
-            if (Math.random() < 0.35) {
-                const target = 15 + Math.floor(Math.random() * 50); 
-                walkTo(target);
-            }
-        }, 5000);
-    }
-    runWalkingAI();
-
-    // Spawn Multicolored Sparkles
-    function spawnSparkles() {
-        const count = 18;
-        const colors = ["#ff007f", "#00ffff", "#39ff14", "#ff00ff", "#ffff00", "#ff7f00", "#ff3b30", "#30d158", "#0a84ff", "#bf5af2"];
-        const icons = ["✨", "✦", "★", "⭐", "💫"];
-        for (let i = 0; i < count; i++) {
-            const sparkle = document.createElement("div");
-            sparkle.className = "sparkle";
-            sparkle.textContent = icons[Math.floor(Math.random() * icons.length)];
-            sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 40 + Math.random() * 60;
-            const dx = Math.cos(angle) * distance;
-            const dy = Math.sin(angle) * distance;
-            
-            sparkle.style.setProperty("--dx", dx + "px");
-            sparkle.style.setProperty("--dy", dy + "px");
-            
-            // Spawn sparkles behind Mickey sitting on toilet
-            sparkle.style.left = "42%";
-            sparkle.style.bottom = "20px";
-            
-            lcdSparkleContainer.appendChild(sparkle);
-            setTimeout(() => sparkle.remove(), 900);
+    function gainExp() {
+        exp += 1;
+        if (exp >= 5) {
+            exp = 0;
+            level += 1;
+            updateScreen();
         }
     }
 
-    // Feed action: switch to kitchen, sit on chair, eat bowl of cereal
+    // Feed action: switch to kitchen, sit on chair, chew bowl cereal
     btnFeed.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
         playBeep(650, 70);
@@ -1059,51 +1542,36 @@ function initTamagotchi() {
 
         isEating = true;
         iconFood.classList.add("active");
-        showScene("kitchen");
-        
-        walkTo(27, (success) => {
+        currentScene = "kitchen";
+        targetX = 44; // chair position
+
+        walkCallback = (success) => {
             if (!success) {
                 isEating = false;
                 iconFood.classList.remove("active");
-                showScene("livingroom");
+                currentScene = "livingroom";
                 return;
             }
 
-            // Sit on chair
-            petWrapper.classList.remove("pet-bounce");
-            petWrapper.classList.add("sitting-chair");
-            
-            // Show food bowl
-            if (foodBowlKitchen) foodBowlKitchen.classList.add("visible");
-
-            petWrapper.classList.add("pet-eating");
-            mickeyMouth.setAttribute("d", "M 43 51 C 43 51, 48 68, 58 64 C 62 62, 63 52, 63 51");
-
+            // Sit and chew for 1500ms
             setTimeout(() => {
                 hunger = Math.min(100, hunger + 20);
-                createFloatingText("+20 🥣", "#047857");
                 gainExp();
                 updateScreen();
                 updateBottomText();
 
                 setTimeout(() => {
-                    petWrapper.classList.remove("pet-eating", "sitting-chair");
-                    petWrapper.classList.add("pet-bounce");
-                    mickeyMouth.setAttribute("d", "M 41 51 C 48 55, 56 55, 64 50");
-                    if (foodBowlKitchen) foodBowlKitchen.classList.remove("visible");
-                    
-                    showScene("livingroom");
+                    currentScene = "livingroom";
                     isEating = false;
                     iconFood.classList.remove("active");
                     updateBottomText();
-                    
-                    setTimeout(() => walkTo(40), 200);
-                }, 1500);
-            }, 800);
-        });
+                    targetX = 64; // return to center
+                }, 1000);
+            }, 1000);
+        };
     });
 
-    // Play action: walk to center, disco dance
+    // Play action: disco dance center
     btnPlay.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
         playBeep(800, 60);
@@ -1112,128 +1580,86 @@ function initTamagotchi() {
 
         isDancing = true;
         iconLove.classList.add("active");
-        
-        walkTo(40, (success) => {
-            if (!success) {
-                isDancing = false;
-                iconLove.classList.remove("active");
-                return;
-            }
+        targetX = 64;
 
-            lcdDisplay.classList.add("disco-mode");
-            discoBall.classList.remove("hidden");
-            petWrapper.classList.remove("pet-bounce");
-            petWrapper.classList.add("pet-disco");
-
-            love = Math.min(100, love + 20);
-            gainExp();
-            updateScreen();
-            updateBottomText();
-
+        walkCallback = (success) => {
+            // Dance for 3 seconds
             setTimeout(() => {
-                lcdDisplay.classList.remove("disco-mode");
-                discoBall.classList.add("hidden");
-                petWrapper.classList.remove("pet-disco");
-                petWrapper.classList.add("pet-bounce");
+                love = Math.min(100, love + 20);
+                gainExp();
+                updateScreen();
+                updateBottomText();
+
                 isDancing = false;
                 iconLove.classList.remove("active");
                 updateBottomText();
             }, 3000);
-        });
+        };
     });
 
-    // Toilet action: switch to bathroom, sit on toilet & poop sparkles
+    // Clean action: bathroom toilet poop sparkles
     btnClean.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
         playBeep(450, 150);
 
         isPooping = true;
         iconClean.classList.add("active");
-        showScene("bathroom");
-        
-        walkTo(22, (success) => {
+        currentScene = "bathroom";
+        targetX = 36; // toilet seat x
+
+        walkCallback = (success) => {
             if (!success) {
                 isPooping = false;
                 iconClean.classList.remove("active");
-                showScene("livingroom");
+                currentScene = "livingroom";
                 return;
             }
 
-            petWrapper.classList.remove("pet-bounce");
-            petWrapper.classList.add("sitting", "pet-poop");
-
-            clean = Math.min(100, clean + 25);
-            spawnSparkles();
-            updateScreen();
-            updateBottomText();
-
+            // Poop for 2.5 seconds
             setTimeout(() => {
-                petWrapper.classList.remove("sitting", "pet-poop");
-                petWrapper.classList.add("pet-bounce");
-                
-                showScene("livingroom");
+                clean = Math.min(100, clean + 25);
+                updateScreen();
+                updateBottomText();
+
+                currentScene = "livingroom";
                 isPooping = false;
                 iconClean.classList.remove("active");
                 updateBottomText();
-                
-                setTimeout(() => walkTo(40), 200);
+                targetX = 64;
             }, 2500);
-        });
+        };
     });
 
-    // Sleep toggle action: switch to bedroom, lie down in bed, lights out
+    // Sleep toggle action: bedroom bed lie down
     btnSleep.addEventListener("click", () => {
         if (isDead || isWalking || isDancing || isPooping || isEating) return;
         playBeep(320, 180);
 
         if (!isSleeping) {
-            isSleeping = true;
+            // Sleep
             iconSleep.classList.add("active");
-            
-            isSleeping = false;
-            showScene("bedroom");
-            walkTo(12, (success) => {
+            currentScene = "bedroom";
+            targetX = 20; // bed position
+
+            walkCallback = (success) => {
                 isSleeping = true;
-                if (!success) {
-                    petWrapper.style.left = "12%";
-                }
-
-                petWrapper.classList.remove("pet-bounce", "walking");
-                petWrapper.classList.add("lying-down");
-
-                lcdDisplay.classList.add("dark-mode");
-                lcdSleeping.classList.remove("hidden");
-
-                eyeL.setAttribute("ry", "0.8");
-                eyeR.setAttribute("ry", "0.8");
-                mickeyMouth.setAttribute("d", "M 44 51 Q 50 53 56 51");
-
+                mickeyX = 20; // force bed x
                 updateScreen();
                 updateBottomText();
-            });
+            };
         } else {
+            // Wake up
             isSleeping = false;
-            lcdDisplay.classList.remove("dark-mode");
-            lcdSleeping.classList.add("hidden");
-
-            eyeL.setAttribute("ry", "5");
-            eyeR.setAttribute("ry", "5");
-            mickeyMouth.setAttribute("d", "M 41 51 C 48 55, 56 55, 64 50");
-            
-            petWrapper.classList.remove("lying-down");
-            petWrapper.classList.add("pet-bounce");
             iconSleep.classList.remove("active");
-
-            showScene("livingroom");
+            currentScene = "livingroom";
             updateScreen();
             updateBottomText();
-
-            setTimeout(() => walkTo(40), 200);
+            targetX = 64;
         }
     });
 
-    // Main Game Loop (runs every 1.5 seconds)
-    setInterval(() => {
+    // Stats decay loop (every 1.5 seconds)
+    let decayTimer = setInterval(() => {
         if (isDead) return;
 
         if (isSleeping) {
@@ -1241,13 +1667,9 @@ function initTamagotchi() {
             hunger = Math.max(0, hunger - 1);
             love = Math.max(0, love - 1);
             clean = Math.max(0, clean - 0.5);
-            
-            if (Math.random() > 0.4) {
-                createFloatingText("z", "#93c5fd");
-            }
 
             if (sleep === 100) {
-                btnSleep.click();
+                btnSleep.click(); // awake
             }
         } else {
             hunger = Math.max(0, hunger - 2);
@@ -1258,20 +1680,6 @@ function initTamagotchi() {
 
         if (hunger === 0 || sleep === 0 || clean === 0) {
             isDead = true;
-            lcdDeath.classList.remove("hidden");
-            petWrapper.classList.add("hidden");
-            lcdAlert.classList.add("hidden");
-            lcdSleeping.classList.add("hidden");
-            
-            if (sceneLivingroom) sceneLivingroom.classList.add("hidden");
-            if (sceneBedroom) sceneBedroom.classList.add("hidden");
-            if (sceneBathroom) sceneBathroom.classList.add("hidden");
-            if (sceneKitchen) sceneKitchen.classList.add("hidden");
-            if (discoBall) discoBall.classList.add("hidden");
-
-            lcdDisplay.classList.remove("dark-mode");
-            lcdDisplay.classList.remove("disco-mode");
-            if (aiTimer) clearInterval(aiTimer);
             updateBottomText();
         }
 
