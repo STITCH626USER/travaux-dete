@@ -1048,6 +1048,20 @@ input:checked + .slider:before {
     transform: translateY(16px) scale(0.95);
 }
 
+/* Pull down pants and expose cute buttocks on toilet */
+.pet-wrapper.sitting #mickey-shorts {
+    transform: translateY(10px) rotate(3deg);
+}
+
+.pet-wrapper.sitting #mickey-butt {
+    display: block !important;
+}
+
+.pet-wrapper.sitting #mickey-tail {
+    transform: translateY(10px);
+    transition: transform 0.2s ease;
+}
+
 #toilet-bowl {
     position: absolute;
     bottom: 2px;
