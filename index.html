@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disney Été 2026 - Itinéraires</title>
+    <!-- Web App Manifest for Android Installation -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B365D">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sticky Premium Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="brand">
+                    <span class="idfm-blue">îledefrance</span>
+                    <span class="idfm-cyan">mobilités</span>
+                </div>
+                <div class="subtitle">ÉTÉ 2026 — TRAVAUX</div>
+            </div>
+
+            <!-- Segmented Control for Direction -->
+            <div class="segmented-control direction-control" style="margin-bottom: 8px;">
+                <button class="segment-btn active" data-direction="aller">
+                    <span class="btn-time">➡️ ALLER</span>
+                    <span class="btn-desc">Stalingrad &rarr; Chessy</span>
+                </button>
+                <button class="segment-btn" data-direction="retour">
+                    <span class="btn-time">⬅️ RETOUR</span>
+                    <span class="btn-desc">Chessy &rarr; Stalingrad</span>
+                </button>
+            </div>
+            
+            <!-- Segmented Control for Time (Dynamically populated by JS) -->
+            <div class="segmented-control time-control" id="time-selector">
+                <!-- Dynamically filled by JS -->
+            </div>
+
+            <!-- Date / Phase Selector (Tabs) -->
+            <div class="tabs-scroll">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-phase="1">
+                        <span class="tab-title">Phase 1</span>
+                        <span class="tab-date">10-24 Juil. & 24-30 Août</span>
+                    </button>
+                    <button class="tab-btn" data-phase="2">
+                        <span class="tab-title">Phase 2</span>
+                        <span class="tab-date">25 Juil. - 7 Août</span>
+                    </button>
+                    <button class="tab-btn" data-phase="3">
+                        <span class="tab-title">Phase 3</span>
+                        <span class="tab-date">8 Août - 23 Août</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dynamic Content -->
+        <main class="app-content">
+            <!-- Summary Card -->
+            <section class="summary-card" id="summary-card">
+                <!-- Dynamically filled by JS based on direction -->
+            </section>
+
+            <!-- Toggle Switch for Plan B (de secours) -->
+            <div class="toggle-container">
+                <div class="toggle-text">
+                    <div class="toggle-title">Inclure les Plans B de secours</div>
+                    <div class="toggle-desc">Affiche un itinéraire alternatif en cas de perturbation</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="plan-b-toggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <!-- Dynamic Route Cards Container -->
+            <div id="routes-container" class="routes-list">
+                <!-- Injected dynamically by JS -->
+            </div>
+            
+            <!-- Live Info Banner -->
+            <div class="info-banner warning">
+                <div class="info-icon">⚠️</div>
+                <div class="info-text" id="info-banner-text">
+                    <strong>Gare de Nation non desservie :</strong> RER A sans arrêt du 29/06 au 30/08 inclus. La tarification Zone 5 est incluse dans votre pass Navigo Toutes Zones.
+                </div>
+            </div>
+        </main>
+        
+        <!-- Offline Install Prompt for Android Chrome -->
+        <div id="install-banner" class="install-prompt-card hidden">
+            <div class="prompt-content">
+                <h3>Ajouter à l'écran d'accueil ?</h3>
+                <p>Installez l'application pour y accéder hors-ligne dans le métro sans connexion.</p>
+            </div>
+            <div class="prompt-actions">
+                <button id="btn-cancel-install" class="btn-secondary">Plus tard</button>
+                <button id="btn-install" class="btn-primary">Installer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

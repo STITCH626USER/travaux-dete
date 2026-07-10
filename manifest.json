@@ -1,0 +1,22 @@
+{
+  "name": "Disney Été 2026 Itinéraires",
+  "short_name": "Disney 2026",
+  "description": "Fiche d'itinéraires dynamique et hors-ligne pour Disneyland Paris à l'été 2026",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#1B365D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
