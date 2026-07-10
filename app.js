@@ -789,10 +789,16 @@ function initTamagotchi() {
     const lcdFoodContainer = document.getElementById("lcd-food-container");
     const lcdSparkleContainer = document.getElementById("lcd-sparkle-container");
     const discoBall = document.getElementById("disco-ball");
-    const toiletBowl = document.getElementById("toilet-bowl");
-    const sleepingBag = document.getElementById("sleeping-bag");
     const mickeyLv = document.getElementById("mickey-lv");
     const pixelBottomText = document.getElementById("pixel-bottom-text");
+    const pixelClock = document.getElementById("pixel-clock");
+
+    // Scenes DOM elements
+    const sceneLivingroom = document.getElementById("scene-livingroom");
+    const sceneBedroom = document.getElementById("scene-bedroom");
+    const sceneBathroom = document.getElementById("scene-bathroom");
+    const sceneKitchen = document.getElementById("scene-kitchen");
+    const foodBowlKitchen = document.getElementById("food-bowl-kitchen");
 
     const btnFeed = document.getElementById("t-btn-a");
     const btnPlay = document.getElementById("t-btn-b");
@@ -809,6 +815,29 @@ function initTamagotchi() {
 
     // Start with Mickey bouncing
     petWrapper.classList.add("pet-bounce");
+
+    // Helper to switch scenes
+    function showScene(sceneId) {
+        if (sceneLivingroom) sceneLivingroom.classList.add("hidden");
+        if (sceneBedroom) sceneBedroom.classList.add("hidden");
+        if (sceneBathroom) sceneBathroom.classList.add("hidden");
+        if (sceneKitchen) sceneKitchen.classList.add("hidden");
+
+        if (sceneId === "livingroom" && sceneLivingroom) sceneLivingroom.classList.remove("hidden");
+        else if (sceneId === "bedroom" && sceneBedroom) sceneBedroom.classList.remove("hidden");
+        else if (sceneId === "bathroom" && sceneBathroom) sceneBathroom.classList.remove("hidden");
+        else if (sceneId === "kitchen" && sceneKitchen) sceneKitchen.classList.remove("hidden");
+    }
+
+    // Digital clock updater
+    function updateClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        if (pixelClock) pixelClock.textContent = `${hrs}:${mins}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
     // Update screen UI and highlight top row icons based on stats
     function updateScreen() {
@@ -880,19 +909,19 @@ function initTamagotchi() {
             return;
         }
         if (isSleeping) {
-            pixelBottomText.textContent = "ZZZ... SLEEPING";
+            pixelBottomText.textContent = "SLEEPING...";
             return;
         }
         if (isDancing) {
-            pixelBottomText.textContent = "DISCO DANCE!";
+            pixelBottomText.textContent = "DISCO! DANCE MOVES!";
             return;
         }
         if (isPooping) {
-            pixelBottomText.textContent = "POOPING...";
+            pixelBottomText.textContent = "POOP TIME! *sparkles*";
             return;
         }
         if (isEating) {
-            pixelBottomText.textContent = "EATING...";
+            pixelBottomText.textContent = "YUMMY! EATING!";
             return;
         }
 
@@ -988,57 +1017,62 @@ function initTamagotchi() {
             sparkle.style.setProperty("--dx", dx + "px");
             sparkle.style.setProperty("--dy", dy + "px");
             
-            sparkle.style.left = (parseFloat(petWrapper.style.left) || 40) + "%";
+            // Spawn sparkles behind Mickey sitting on toilet
+            sparkle.style.left = "42%";
             sparkle.style.bottom = "20px";
             
             lcdSparkleContainer.appendChild(sparkle);
-            setTimeout(() => sparkle.remove(), 800);
+            setTimeout(() => sparkle.remove(), 900);
         }
     }
 
-    // Feed action: walk to center, eat falling dollar
+    // Feed action: switch to kitchen, sit on chair, eat bowl of cereal
     btnFeed.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
 
         isEating = true;
         iconFood.classList.add("active");
+        showScene("kitchen");
         
-        walkTo(40, (success) => {
+        walkTo(27, (success) => {
             if (!success) {
                 isEating = false;
                 iconFood.classList.remove("active");
+                showScene("livingroom");
                 return;
             }
 
-            const bill = document.createElement("div");
-            bill.className = "dollar-bill";
-            bill.textContent = "💵";
-            bill.style.left = "43%";
-            bill.style.top = "10px";
-            lcdFoodContainer.appendChild(bill);
+            // Sit on chair
+            petWrapper.classList.remove("pet-bounce");
+            petWrapper.classList.add("sitting-chair");
+            
+            // Show food bowl
+            if (foodBowlKitchen) foodBowlKitchen.classList.add("visible");
+
+            petWrapper.classList.add("pet-eating");
+            mickeyMouth.setAttribute("d", "M 43 51 C 43 51, 48 68, 58 64 C 62 62, 63 52, 63 51");
 
             setTimeout(() => {
-                bill.remove();
-                
-                petWrapper.classList.remove("pet-bounce");
-                petWrapper.classList.add("pet-eating");
-                
-                mickeyMouth.setAttribute("d", "M 43 51 C 43 51, 48 68, 58 64 C 62 62, 63 52, 63 51");
-
                 hunger = Math.min(100, hunger + 20);
-                createFloatingText("+20 💵", "#047857");
+                createFloatingText("+20 🥣", "#047857");
                 gainExp();
                 updateScreen();
                 updateBottomText();
 
                 setTimeout(() => {
-                    petWrapper.classList.remove("pet-eating");
+                    petWrapper.classList.remove("pet-eating", "sitting-chair");
                     petWrapper.classList.add("pet-bounce");
                     mickeyMouth.setAttribute("d", "M 41 51 C 48 55, 56 55, 64 50");
+                    if (foodBowlKitchen) foodBowlKitchen.classList.remove("visible");
+                    
+                    showScene("livingroom");
                     isEating = false;
                     iconFood.classList.remove("active");
-                }, 600);
-            }, 600);
+                    updateBottomText();
+                    
+                    setTimeout(() => walkTo(40), 200);
+                }, 1500);
+            }, 800);
         });
     });
 
@@ -1078,21 +1112,22 @@ function initTamagotchi() {
         });
     });
 
-    // Toilet action: walk to toilet, sit & poop
+    // Toilet action: switch to bathroom, sit on toilet & poop sparkles
     btnClean.addEventListener("click", () => {
         if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
 
         isPooping = true;
         iconClean.classList.add("active");
+        showScene("bathroom");
         
-        walkTo(14, (success) => {
+        walkTo(22, (success) => {
             if (!success) {
                 isPooping = false;
                 iconClean.classList.remove("active");
+                showScene("livingroom");
                 return;
             }
 
-            if (toiletBowl) toiletBowl.classList.remove("hidden");
             petWrapper.classList.remove("pet-bounce");
             petWrapper.classList.add("sitting", "pet-poop");
 
@@ -1102,19 +1137,20 @@ function initTamagotchi() {
             updateBottomText();
 
             setTimeout(() => {
-                if (toiletBowl) toiletBowl.classList.add("hidden");
                 petWrapper.classList.remove("sitting", "pet-poop");
                 petWrapper.classList.add("pet-bounce");
+                
+                showScene("livingroom");
                 isPooping = false;
                 iconClean.classList.remove("active");
                 updateBottomText();
                 
-                setTimeout(() => walkTo(35), 200);
+                setTimeout(() => walkTo(40), 200);
             }, 2500);
         });
     });
 
-    // Sleep toggle action: walk to sleeping bag, lie down, lights out
+    // Sleep toggle action: switch to bedroom, lie down in bed, lights out
     btnSleep.addEventListener("click", () => {
         if (isDead || isWalking || isDancing || isPooping || isEating) return;
 
@@ -1123,13 +1159,12 @@ function initTamagotchi() {
             iconSleep.classList.add("active");
             
             isSleeping = false;
-            walkTo(70, (success) => {
+            showScene("bedroom");
+            walkTo(12, (success) => {
                 isSleeping = true;
                 if (!success) {
-                    petWrapper.style.left = "70%";
+                    petWrapper.style.left = "12%";
                 }
-
-                if (sleepingBag) sleepingBag.classList.remove("hidden");
 
                 petWrapper.classList.remove("pet-bounce", "walking");
                 petWrapper.classList.add("lying-down");
@@ -1141,7 +1176,6 @@ function initTamagotchi() {
                 eyeR.setAttribute("ry", "0.8");
                 mickeyMouth.setAttribute("d", "M 44 51 Q 50 53 56 51");
 
-                createFloatingText("Sleep...", "#1e3a8a");
                 updateScreen();
                 updateBottomText();
             });
@@ -1149,7 +1183,6 @@ function initTamagotchi() {
             isSleeping = false;
             lcdDisplay.classList.remove("dark-mode");
             lcdSleeping.classList.add("hidden");
-            if (sleepingBag) sleepingBag.classList.add("hidden");
 
             eyeL.setAttribute("ry", "5");
             eyeR.setAttribute("ry", "5");
@@ -1159,7 +1192,7 @@ function initTamagotchi() {
             petWrapper.classList.add("pet-bounce");
             iconSleep.classList.remove("active");
 
-            createFloatingText("Réveil !", "#b45309");
+            showScene("livingroom");
             updateScreen();
             updateBottomText();
 
@@ -1197,9 +1230,14 @@ function initTamagotchi() {
             petWrapper.classList.add("hidden");
             lcdAlert.classList.add("hidden");
             lcdSleeping.classList.add("hidden");
+            
+            if (sceneLivingroom) sceneLivingroom.classList.add("hidden");
+            if (sceneBedroom) sceneBedroom.classList.add("hidden");
+            if (sceneBathroom) sceneBathroom.classList.add("hidden");
+            if (sceneKitchen) sceneKitchen.classList.add("hidden");
             if (discoBall) discoBall.classList.add("hidden");
-            if (toiletBowl) toiletBowl.classList.add("hidden");
-            if (sleepingBag) sleepingBag.classList.add("hidden");
+
+            lcdDisplay.classList.remove("dark-mode");
             lcdDisplay.classList.remove("disco-mode");
             if (aiTimer) clearInterval(aiTimer);
             updateBottomText();

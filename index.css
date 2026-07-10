@@ -1109,8 +1109,8 @@ input:checked + .slider:before {
     }
 }
 
-/* 🌳 OUTDOOR PIXEL ART BACKDROP & SYSTEM */
-.pixel-background {
+/* 🛋️ SCENES LAYOUT & BACKGROUND SYSTEMS */
+.scene {
     position: absolute;
     top: 0;
     left: 0;
@@ -1120,83 +1120,163 @@ input:checked + .slider:before {
     overflow: hidden;
 }
 
-.pixel-sky {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background: #00e5ff; /* Bright Sky Blue */
-    background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
-    background-size: 100% 2px;
+.scene.hidden {
+    display: none !important;
 }
 
-/* Pixel Sun */
-.pixel-sun {
-    position: absolute;
-    top: 15px;
-    right: 14%;
-    width: 24px;
-    height: 24px;
-    background: #facc15;
-    border: 2px solid #000;
-    box-shadow: 0 0 10px rgba(250,204,21,0.6);
-}
-
-/* Pixel Cloud matching photo */
-.pixel-cloud {
-    position: absolute;
-    top: 22px;
-    left: 10%;
-    width: 32px;
-    height: 12px;
-    background: #ffffff;
-    border: 2.2px solid #000;
-}
-.pixel-cloud::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: 6px;
-    width: 16px;
-    height: 6px;
-    background: #ffffff;
-    border-top: 2.2px solid #000;
-    border-left: 2.2px solid #000;
-    border-right: 2.2px solid #000;
-}
-
-/* Purple Mountains matching photo */
-.pixel-mountains {
-    position: absolute;
-    bottom: 24px;
-    left: 0;
-    width: 100%;
-    height: 20px;
-    background: #b185db; /* Pinkish-purple hills */
-    border-top: 2.2px solid #000;
-    clip-path: polygon(0% 100%, 0% 50%, 15% 10%, 30% 60%, 50% 20%, 70% 70%, 85% 30%, 100% 60%, 100% 100%);
-}
-
-/* Tree on the Right matching photo */
-.pixel-tree {
-    position: absolute;
-    bottom: 24px;
-    right: 8%;
-    width: 30px;
-    height: 50px;
-    z-index: 3;
-}
-
-/* Green Grass land matching photo */
-.pixel-grass {
+/* Floor lines per scene to separate wall from floor */
+.room-floor-livingroom, .room-floor-bedroom, .room-floor-kitchen, .room-floor-bathroom {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 28px;
-    background: #4ade80; /* Grass Green */
-    border-top: 2.2px solid #000;
+    height: 14px;
+    z-index: 2;
+}
+
+/* 🛋️ Scene 1: Living Room */
+#scene-livingroom {
+    background: #00e5ff; /* Light Sky Blue matching photo */
+    background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 100% 2px;
+}
+.room-floor-livingroom {
+    background: linear-gradient(to bottom, #d97706, #a16207); /* Wooden Floor */
+    border-top: 1.5px solid #000;
+}
+.couch-green {
+    position: absolute;
+    bottom: 12px;
+    left: 8%;
+    z-index: 3;
+}
+.armchair-orange {
+    position: absolute;
+    bottom: 12px;
+    right: 8%;
+    z-index: 3;
+}
+.painting-livingroom {
+    position: absolute;
+    top: 24px;
+    left: 28%;
+    font-size: 11px;
+    background: #fff;
+    border: 1.5px solid #000;
+    padding: 0px 2px;
+    border-radius: 1px;
+    z-index: 2;
+}
+.floor-lamp {
+    position: absolute;
+    bottom: 12px;
+    left: 48%;
+    z-index: 3;
+}
+
+/* 🛏️ Scene 2: Bedroom */
+#scene-bedroom {
+    background: #fef3c7; /* Warm Beige / Cream */
+    background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 100% 2px;
+}
+.room-floor-bedroom {
+    background: linear-gradient(to bottom, #ca8a04, #854d0e); /* Oak wood floor */
+    border-top: 1.5px solid #000;
+}
+.bed-bedroom {
+    position: absolute;
+    bottom: 12px;
+    left: 6%;
+    z-index: 4; /* Bed frames are under Mickey */
+}
+.bed-blanket-overlay {
+    position: absolute;
+    bottom: 12px;
+    left: 6%;
+    z-index: 8; /* Blanket overlay is on top of Mickey */
+    pointer-events: none;
+}
+.clock-wall {
+    position: absolute;
+    top: 24px;
+    left: 28%;
+    z-index: 2;
+}
+.window-bedroom {
+    position: absolute;
+    top: 20px;
+    right: 14%;
+    z-index: 2;
+}
+
+/* 🧼 Scene 3: Bathroom */
+#scene-bathroom {
+    background: #ffffff;
+    background-image: linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
+    background-size: 8px 8px; /* Classic Grid Tiles */
+}
+.room-floor-bathroom {
+    background: linear-gradient(to bottom, #a5f3fc, #0ea5e9); /* Blue linoleum tiling */
+    border-top: 1.5px solid #000;
+}
+.sink-bathroom {
+    position: absolute;
+    bottom: 12px;
+    right: 8%;
+    z-index: 3;
+}
+.toilet-bathroom {
+    position: absolute;
+    bottom: 12px;
+    left: 12%;
+    z-index: 3;
+}
+
+/* 🍳 Scene 4: Kitchen */
+#scene-kitchen {
+    background: #fed7aa; /* Warm Orange/Peach Cream Wall */
+    background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 100% 2px;
+}
+.room-floor-kitchen {
+    background: repeating-linear-gradient(45deg, #e2e8f0, #e2e8f0 6px, #94a3b8 6px, #94a3b8 12px); /* Chequered */
+    border-top: 1.5px solid #000;
+}
+.stove-kitchen {
+    position: absolute;
+    bottom: 12px;
+    right: 6%;
+    z-index: 3;
+}
+.cabinet-kitchen {
+    position: absolute;
+    top: 20px;
+    left: 12%;
+    z-index: 2;
+}
+.table-kitchen {
+    position: absolute;
+    bottom: 12px;
+    left: 42%;
+    z-index: 3;
+}
+.chair-kitchen {
+    position: absolute;
+    bottom: 12px;
+    left: 28%;
+    z-index: 3;
+}
+.food-bowl-kitchen {
+    position: absolute;
+    bottom: 23px;
+    left: 49%;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.food-bowl-kitchen.visible {
+    opacity: 1;
 }
 
 /* 🚶‍♂️ Leg Walking Animations */
@@ -1227,34 +1307,50 @@ input:checked + .slider:before {
     to { transform: rotate(-25deg); }
 }
 
-/* Sleeping Position on Outdoor Sleeping Bag */
+/* 🛌 Sleeping Position (Bed) */
 .pet-wrapper.lying-down {
-    left: 74% !important;
-    bottom: 12px !important;
-    transform: rotate(-90deg) translate(-4px, 4px) scale(0.7) !important;
-    z-index: 5 !important;
+    left: 12% !important;
+    bottom: 19px !important;
+    transform: rotate(-90deg) translate(-4px, 4px) scale(0.68) !important;
+    z-index: 5 !important; /* Sandwiched: under blanket overlay which is at z-index 8 */
     animation: none !important;
 }
 
-/* Toilet Bowl placement */
-#toilet-bowl {
-    position: absolute;
-    bottom: 12px;
-    left: 14%;
-    z-index: 8;
-    animation: fadeInToilet 0.2s ease forwards;
+/* 🚽 Toilet sitting position (Bathroom) */
+.pet-wrapper.sitting {
+    left: 22% !important;
+    bottom: 20px !important;
+    z-index: 5 !important;
+    transform: scaleX(1) scale(0.85) !important;
+    animation: none !important;
 }
 
-@keyframes fadeInToilet {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.pet-wrapper.sitting #mickey-shorts {
+    transform: translateY(12px) rotate(3deg) !important;
 }
 
-/* Multicolored Sparkles */
+.pet-wrapper.sitting #mickey-butt {
+    display: block !important;
+}
+
+.pet-wrapper.sitting #mickey-tail {
+    transform: translateY(10px) rotate(-15deg);
+}
+
+/* 🪑 Eating sitting position (Kitchen) */
+.pet-wrapper.sitting-chair {
+    left: 27% !important;
+    bottom: 15px !important;
+    z-index: 5 !important;
+    transform: scaleX(1) scale(0.92) !important;
+    animation: none !important;
+}
+
+/* Multicolored Toilet Sparkles */
 .sparkle {
     position: absolute;
     font-size: 14px;
-    animation: shootSparkle 0.8s forwards cubic-bezier(0.25, 1, 0.5, 1);
+    animation: shootSparkle 0.9s forwards cubic-bezier(0.25, 1, 0.5, 1);
     pointer-events: none;
     z-index: 25;
 }
@@ -1265,7 +1361,7 @@ input:checked + .slider:before {
         opacity: 1;
     }
     100% {
-        transform: translate(var(--dx), var(--dy)) scale(1.4);
+        transform: translate(var(--dx), var(--dy)) scale(1.5);
         opacity: 0;
     }
 }
@@ -1289,7 +1385,7 @@ input:checked + .slider:before {
     justify-content: space-around;
     align-items: center;
     padding: 0 4px;
-    z-index: 10;
+    z-index: 20; /* Keep icons above all backgrounds */
 }
 
 .pixel-icon-btn {
@@ -1312,7 +1408,7 @@ input:checked + .slider:before {
     to { opacity: 1; }
 }
 
-/* Header Text (Lv. 5) */
+/* Header Text (Lv. 5 & Clock) */
 .pixel-header-text {
     position: absolute;
     top: 24px;
@@ -1320,12 +1416,12 @@ input:checked + .slider:before {
     width: 100%;
     text-align: center;
     font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
+    font-size: 7px;
     color: #000000;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: -0.5px;
-    z-index: 5;
+    z-index: 10;
     text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
 }
 
