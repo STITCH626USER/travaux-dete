@@ -936,8 +936,8 @@ function initTamagotchi() {
 
         if (isSleeping) {
             sleep = Math.min(100, sleep + 5);
-            hunger = Math.max(0, hunger - 1.5);
-            love = Math.max(0, love - 1);
+            hunger = Math.max(0, hunger - 1.8); // 20% faster decay (was 1.5)
+            love = Math.max(0, love - 1.2);    // 20% faster decay (was 1.0)
             
             // Spawn little floating Zzz
             if (Math.random() > 0.4) {
@@ -949,9 +949,9 @@ function initTamagotchi() {
                 btnSleep.click();
             }
         } else {
-            hunger = Math.max(0, hunger - 2.5);
-            love = Math.max(0, love - 2);
-            sleep = Math.max(0, sleep - 1.5);
+            hunger = Math.max(0, hunger - 3.0); // 20% faster decay (was 2.5)
+            love = Math.max(0, love - 2.4);   // 20% faster decay (was 2.0)
+            sleep = Math.max(0, sleep - 1.8);  // 20% faster decay (was 1.5)
         }
 
         // Check death conditions
