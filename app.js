@@ -754,3 +754,209 @@ function setupInstallBanner() {
         installBanner.classList.add("hidden");
     });
 }
+
+// ==========================================
+// 🎮 TAMAGOTCHI EMULATOR LOGIC
+// ==========================================
+function initTamagotchi() {
+    // States
+    let hunger = 80;
+    let love = 80;
+    let sleep = 80;
+    let isSleeping = false;
+    let isDead = false;
+
+    // DOM Elements
+    const statFood = document.getElementById("stat-food");
+    const statLove = document.getElementById("stat-love");
+    const statSleep = document.getElementById("stat-sleep");
+    const lcdDisplay = document.getElementById("lcd-display");
+    const petWrapper = document.getElementById("pet-wrapper");
+    const mickeyMouth = document.getElementById("mickey-mouth");
+    const eyeL = document.getElementById("m-eye-l");
+    const eyeR = document.getElementById("m-eye-r");
+    const lcdSleeping = document.getElementById("lcd-sleeping-indicator");
+    const lcdDeath = document.getElementById("lcd-death");
+    const lcdAlert = document.getElementById("lcd-alert");
+    const lcdFoodContainer = document.getElementById("lcd-food-container");
+
+    const btnFeed = document.getElementById("t-btn-a");
+    const btnPlay = document.getElementById("t-btn-b");
+    const btnSleep = document.getElementById("t-btn-c");
+
+    if (!statFood || !statLove || !statSleep) {
+        console.warn("Tamagotchi UI elements missing!");
+        return;
+    }
+
+    // Make Mickey bounce by default
+    petWrapper.classList.add("pet-bounce");
+
+    // Helper to generate bars
+    function getBar(val) {
+        const total = 5;
+        const active = Math.round((val / 100) * total);
+        let bar = "";
+        for (let i = 0; i < total; i++) {
+            bar += i < active ? "❚" : "░";
+        }
+        return bar;
+    }
+
+    // Update screen UI
+    function updateScreen() {
+        statFood.textContent = "🍔 " + getBar(hunger);
+        statLove.textContent = "❤️ " + getBar(love);
+        statSleep.textContent = "💤 " + getBar(sleep);
+
+        // Alert if hunger is low
+        if (hunger <= 25 && !isDead && !isSleeping) {
+            lcdAlert.classList.remove("hidden");
+        } else {
+            lcdAlert.classList.add("hidden");
+        }
+    }
+
+    // Float text creator (+15$, +20❤️)
+    function createFloatingText(text, color = "#111827") {
+        const ft = document.createElement("div");
+        ft.className = "floating-text";
+        ft.textContent = text;
+        ft.style.color = color;
+        ft.style.left = (40 + Math.random() * 20) + "%";
+        ft.style.top = "30%";
+        lcdDisplay.appendChild(ft);
+        setTimeout(() => ft.remove(), 800);
+    }
+
+    // Feed action (Dollar bills!)
+    btnFeed.addEventListener("click", () => {
+        if (isDead || isSleeping) return;
+
+        // Spawn dollar bill 💵
+        const bill = document.createElement("div");
+        bill.className = "dollar-bill";
+        bill.textContent = "💵";
+        bill.style.left = (35 + Math.random() * 30) + "%";
+        bill.style.top = "10px";
+        lcdFoodContainer.appendChild(bill);
+
+        // Animate Mickey looking up and eating
+        setTimeout(() => {
+            bill.remove();
+            
+            // Eat animation
+            petWrapper.classList.remove("pet-bounce");
+            petWrapper.classList.add("pet-eating");
+            
+            // Open mouth
+            mickeyMouth.setAttribute("d", "M 45 74 Q 50 82 55 74");
+
+            // Stats increase
+            hunger = Math.min(100, hunger + 20);
+            createFloatingText("+20 💵", "#047857");
+            updateScreen();
+
+            setTimeout(() => {
+                petWrapper.classList.remove("pet-eating");
+                petWrapper.classList.add("pet-bounce");
+                // Close mouth back to smile
+                mickeyMouth.setAttribute("d", "M 40 71 Q 50 77 60 71");
+            }, 500);
+        }, 550);
+    });
+
+    // Play action (Dance!)
+    btnPlay.addEventListener("click", () => {
+        if (isDead || isSleeping) return;
+
+        petWrapper.classList.remove("pet-bounce");
+        petWrapper.classList.add("pet-spin");
+
+        love = Math.min(100, love + 15);
+        createFloatingText("+15 ❤️", "#b91c1c");
+        updateScreen();
+
+        setTimeout(() => {
+            petWrapper.classList.remove("pet-spin");
+            petWrapper.classList.add("pet-bounce");
+        }, 600);
+    });
+
+    // Sleep toggle action
+    btnSleep.addEventListener("click", () => {
+        if (isDead) return;
+
+        isSleeping = !isSleeping;
+        if (isSleeping) {
+            lcdDisplay.classList.add("dark-mode");
+            lcdSleeping.classList.remove("hidden");
+            petWrapper.classList.remove("pet-bounce");
+
+            // Close eyes (flat lines)
+            eyeL.setAttribute("ry", "1");
+            eyeR.setAttribute("ry", "1");
+            mickeyMouth.setAttribute("d", "M 46 73 Q 50 75 54 73"); // Small sleeping smile
+            
+            createFloatingText("Sleep...", "#1e3a8a");
+        } else {
+            lcdDisplay.classList.remove("dark-mode");
+            lcdSleeping.classList.add("hidden");
+            petWrapper.classList.add("pet-bounce");
+
+            // Open eyes
+            eyeL.setAttribute("ry", "9");
+            eyeR.setAttribute("ry", "9");
+            mickeyMouth.setAttribute("d", "M 40 71 Q 50 77 60 71"); // Big smile
+            
+            createFloatingText("Réveil !", "#b45309");
+        }
+        updateScreen();
+    });
+
+    // Main Game Loop (runs every 1.5 seconds)
+    setInterval(() => {
+        if (isDead) return;
+
+        if (isSleeping) {
+            sleep = Math.min(100, sleep + 5);
+            hunger = Math.max(0, hunger - 1.5);
+            love = Math.max(0, love - 1);
+            
+            // Spawn little floating Zzz
+            if (Math.random() > 0.4) {
+                createFloatingText("z", "#1e3a8a");
+            }
+
+            // Wake up automatically if fully rested
+            if (sleep === 100) {
+                btnSleep.click();
+            }
+        } else {
+            hunger = Math.max(0, hunger - 2.5);
+            love = Math.max(0, love - 2);
+            sleep = Math.max(0, sleep - 1.5);
+        }
+
+        // Check death conditions
+        if (hunger === 0 || sleep === 0) {
+            isDead = true;
+            lcdDeath.classList.remove("hidden");
+            petWrapper.classList.add("hidden");
+            lcdAlert.classList.add("hidden");
+            lcdSleeping.classList.add("hidden");
+        }
+
+        updateScreen();
+    }, 1500);
+
+    // Initial render
+    updateScreen();
+}
+
+// Start Tamagotchi when DOM loaded
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTamagotchi);
+} else {
+    initTamagotchi();
+}

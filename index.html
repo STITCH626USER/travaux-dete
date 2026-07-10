@@ -96,6 +96,74 @@
                     <strong>Gare de Nation non desservie :</strong> RER A sans arrêt du 29/06 au 30/08 inclus. La tarification Zone 5 est incluse dans votre pass Navigo Toutes Zones.
                 </div>
             </div>
+
+            <!-- 🎮 MICRO-TAMAGOTCHI 1928 EMULATOR -->
+            <section class="tamagotchi-section">
+                <div class="tamagotchi-title">👾 MICRO-TAMAGOTCHI 1928</div>
+                <div class="tamagotchi-container">
+                    <div class="tamagotchi-shell">
+                        <div class="tamagotchi-screen-bezel">
+                            <div class="screen-glass">
+                                <div class="lcd-header">
+                                    <span id="stat-food">🍔 ❚❚❚❚❚</span>
+                                    <span id="stat-love">❤️ ❚❚❚❚❚</span>
+                                    <span id="stat-sleep">💤 ❚❚❚❚❚</span>
+                                </div>
+                                <div class="lcd-display" id="lcd-display">
+                                    <!-- Mickey 1928 SVG Pet -->
+                                    <div class="pet-wrapper" id="pet-wrapper">
+                                        <svg viewBox="0 0 100 100" width="60" height="60" id="mickey-svg">
+                                            <!-- Ears -->
+                                            <circle cx="25" cy="30" r="18" class="mickey-black" />
+                                            <circle cx="75" cy="30" r="18" class="mickey-black" />
+                                            <!-- Head -->
+                                            <circle cx="50" cy="60" r="28" class="mickey-black" />
+                                            <!-- Face mask -->
+                                            <path d="M 50 40 C 36 40, 32 54, 34 68 C 36 78, 44 82, 50 82 C 56 82, 64 78, 66 68 C 68 54, 64 40, 50 40 Z" fill="#ede6d5" class="mickey-skin" />
+                                            <path d="M 50 48 C 42 48, 38 56, 38 66 C 38 72, 43 76, 50 76 C 57 76, 62 72, 62 66 C 62 56, 58 48, 50 48 Z" fill="#ede6d5" class="mickey-skin" />
+                                            <!-- Eyes -->
+                                            <ellipse cx="44" cy="56" rx="4" ry="9" class="mickey-eye" id="m-eye-l" />
+                                            <ellipse cx="56" cy="56" rx="4" ry="9" class="mickey-eye" id="m-eye-r" />
+                                            <!-- Nose -->
+                                            <ellipse cx="50" cy="67" rx="5.5" ry="3.2" class="mickey-black" />
+                                            <!-- Mouth -->
+                                            <path d="M 40 71 Q 50 77 60 71" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round" id="mickey-mouth" />
+                                            <!-- Steamboat Willie Hat -->
+                                            <g id="mickey-hat">
+                                                <rect x="42" y="24" width="16" height="5" rx="1.5" class="mickey-black" />
+                                                <path d="M 44 24 L 46 16 L 54 16 L 56 24 Z" fill="#ede6d5" stroke="#111" stroke-width="1.5" class="mickey-hat-top" />
+                                                <circle cx="50" cy="20" r="1.2" class="mickey-black" />
+                                            </g>
+                                        </svg>
+                                    </div>
+                                    
+                                    <!-- LCD indicators & overlays -->
+                                    <div id="lcd-sleeping-indicator" class="hidden">Zzz...</div>
+                                    <div id="lcd-death" class="hidden">☠️ RIP<br>Mickey (1928-2026)</div>
+                                    <div id="lcd-alert" class="hidden">⚠️ FAIM !</div>
+                                    <div id="lcd-food-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Physical Buttons -->
+                        <div class="shell-buttons">
+                            <div class="btn-group">
+                                <button id="t-btn-a" class="physical-btn btn-feed" title="Nourrir (Dollars)"></button>
+                                <span class="btn-tag">NOURRIR</span>
+                            </div>
+                            <div class="btn-group">
+                                <button id="t-btn-b" class="physical-btn btn-play" title="Jouer"></button>
+                                <span class="btn-tag">JOUER</span>
+                            </div>
+                            <div class="btn-group">
+                                <button id="t-btn-c" class="physical-btn btn-sleep" title="Sommeil / Réveil"></button>
+                                <span class="btn-tag">SOMMEIL</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
         
         <!-- Offline Install Prompt for Android Chrome -->
