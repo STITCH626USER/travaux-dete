@@ -783,6 +783,7 @@ function initTamagotchi() {
     const lcdFoodContainer = document.getElementById("lcd-food-container");
     const lcdSparkleContainer = document.getElementById("lcd-sparkle-container");
     const discoBall = document.getElementById("disco-ball");
+    const toiletBowl = document.getElementById("toilet-bowl");
 
     const btnFeed = document.getElementById("t-btn-a");
     const btnPlay = document.getElementById("t-btn-b");
@@ -835,17 +836,20 @@ function initTamagotchi() {
         setTimeout(() => ft.remove(), 800);
     }
 
-    // Spawn Sparkles from Mickey's butt
+    // Spawn Multicolored Sparkles from Mickey's butt
     function spawnSparkles() {
-        const count = 10;
+        const count = 16;
+        const colors = ["#ff007f", "#00ffff", "#39ff14", "#ff00ff", "#ffff00", "#ff7f00", "#ff3b30", "#30d158", "#0a84ff", "#bf5af2"];
+        const icons = ["✨", "✦", "★", "⭐", "💫"];
         for (let i = 0; i < count; i++) {
             const sparkle = document.createElement("div");
             sparkle.className = "sparkle";
-            sparkle.textContent = "✨";
+            sparkle.textContent = icons[Math.floor(Math.random() * icons.length)];
+            sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
             
             // Random direction
             const angle = Math.random() * Math.PI * 2;
-            const distance = 40 + Math.random() * 40;
+            const distance = 40 + Math.random() * 60;
             const dx = Math.cos(angle) * distance;
             const dy = Math.sin(angle) * distance;
             
@@ -854,7 +858,7 @@ function initTamagotchi() {
             
             // Positioning near the butt area of Mickey (around the red pants)
             sparkle.style.left = "48%";
-            sparkle.style.bottom = "32px";
+            sparkle.style.bottom = "24px";
             
             lcdSparkleContainer.appendChild(sparkle);
             setTimeout(() => sparkle.remove(), 800);
@@ -919,22 +923,24 @@ function initTamagotchi() {
         }, 3000); // 3 seconds disco!
     });
 
-    // Toilet action (Sparkle poop!)
+    // Toilet action (Toilet bowl and sparkles!)
     btnClean.addEventListener("click", () => {
         if (isDead || isSleeping) return;
 
+        // Make toilet bowl visible
+        if (toiletBowl) toiletBowl.classList.remove("hidden");
         petWrapper.classList.remove("pet-bounce");
-        petWrapper.classList.add("pet-poop");
+        petWrapper.classList.add("sitting", "pet-poop");
 
         clean = Math.min(100, clean + 25);
-        createFloatingText("✨ Propreté !", "#d97706");
         spawnSparkles();
         updateScreen();
 
         setTimeout(() => {
-            petWrapper.classList.remove("pet-poop");
+            if (toiletBowl) toiletBowl.classList.add("hidden");
+            petWrapper.classList.remove("sitting", "pet-poop");
             petWrapper.classList.add("pet-bounce");
-        }, 1200); // 1.2s sparkle wiggle
+        }, 2500); // 2.5s sits on toilet
     });
 
     // Sleep toggle action
@@ -1002,6 +1008,7 @@ function initTamagotchi() {
             lcdAlert.classList.add("hidden");
             lcdSleeping.classList.add("hidden");
             if (discoBall) discoBall.classList.add("hidden");
+            if (toiletBowl) toiletBowl.classList.add("hidden");
             lcdDisplay.classList.remove("disco-mode");
         }
 

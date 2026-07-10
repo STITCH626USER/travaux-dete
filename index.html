@@ -119,57 +119,84 @@
                                         </svg>
                                     </div>
 
+                                    <!-- Toilet Bowl (initially hidden) -->
+                                    <div id="toilet-bowl" class="hidden">
+                                        <svg viewBox="0 0 60 60" width="55" height="55">
+                                            <rect x="10" y="5" width="14" height="32" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" rx="2" />
+                                            <circle cx="17" cy="10" r="2.5" fill="#cbd5e1" stroke="#475569" stroke-width="1" />
+                                            <path d="M 24 24 L 28 52 L 44 52 L 48 24 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" />
+                                            <ellipse cx="38" cy="24" rx="14" ry="5" fill="#ffffff" stroke="#64748b" stroke-width="1.8" />
+                                            <ellipse cx="38" cy="24" rx="9" ry="2.5" fill="#cbd5e1" />
+                                        </svg>
+                                    </div>
+
                                     <!-- Mickey Full Body SVG Pet -->
                                     <div class="pet-wrapper" id="pet-wrapper">
                                         <svg viewBox="0 0 100 120" width="75" height="90" id="mickey-svg">
-                                            <!-- Ears -->
-                                            <circle cx="28" cy="25" r="15" fill="#1e1e1e" />
-                                            <circle cx="72" cy="25" r="15" fill="#1e1e1e" />
+                                            <!-- Tail (Classic 1928 Mickey tail!) -->
+                                            <path d="M 38 82 Q 15 90 8 75" fill="none" stroke="#1e1e1e" stroke-width="2.5" stroke-linecap="round" id="mickey-tail" />
                                             
-                                            <!-- Left Arm -->
-                                            <path d="M 32 60 Q 15 65 24 80 Q 28 80 28 75" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-l" style="transform-origin: 32px 60px;" />
-                                            <circle cx="24" cy="80" r="4.5" fill="#fff" stroke="#111" stroke-width="1" />
-
-                                            <!-- Right Arm -->
-                                            <path d="M 68 60 Q 85 65 76 80 Q 72 80 72 75" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-r" style="transform-origin: 68px 60px;" />
-                                            <circle cx="76" cy="80" r="4.5" fill="#fff" stroke="#111" stroke-width="1" />
-
+                                            <!-- Ears -->
+                                            <circle cx="28" cy="24" r="14" fill="#1e1e1e" />
+                                            <circle cx="72" cy="24" r="14" fill="#1e1e1e" />
+                                            
                                             <!-- Legs -->
-                                            <rect x="38" y="85" width="4" height="20" fill="#1e1e1e" />
-                                            <rect x="58" y="85" width="4" height="20" fill="#1e1e1e" />
+                                            <path d="M 42 85 L 42 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" />
+                                            <path d="M 58 85 L 58 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" />
 
                                             <!-- Shoes -->
-                                            <ellipse cx="34" cy="106" rx="10" ry="7" fill="#facc15" stroke="#ca8a04" stroke-width="1" />
-                                            <ellipse cx="66" cy="106" rx="10" ry="7" fill="#facc15" stroke="#ca8a04" stroke-width="1" />
+                                            <ellipse cx="36" cy="110" rx="12" ry="8" fill="#facc15" stroke="#ca8a04" stroke-width="1.2" />
+                                            <ellipse cx="64" cy="110" rx="12" ry="8" fill="#facc15" stroke="#ca8a04" stroke-width="1.2" />
+
+                                            <!-- Left Arm -->
+                                            <path d="M 32 60 Q 14 66 22 80" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-l" style="transform-origin: 32px 60px;" />
+                                            <g id="glove-l">
+                                                <circle cx="21" cy="80" r="5" fill="#fff" stroke="#111" stroke-width="1" />
+                                                <path d="M 20 78 L 22 82 M 22 77 L 24 81" stroke="#111" stroke-width="0.8" />
+                                            </g>
+
+                                            <!-- Right Arm -->
+                                            <path d="M 68 60 Q 86 66 78 80" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-r" style="transform-origin: 68px 60px;" />
+                                            <g id="glove-r">
+                                                <circle cx="79" cy="80" r="5" fill="#fff" stroke="#111" stroke-width="1" />
+                                                <path d="M 80 78 L 78 82 M 78 77 L 76 81" stroke="#111" stroke-width="0.8" />
+                                            </g>
 
                                             <!-- Torso -->
-                                            <ellipse cx="50" cy="72" rx="15" ry="18" fill="#1e1e1e" />
+                                            <ellipse cx="50" cy="72" rx="14" ry="17" fill="#1e1e1e" />
                                             
                                             <!-- Red Shorts -->
-                                            <path d="M 35 72 C 35 88, 65 88, 65 72 Z" fill="#ef4444" />
-                                            <rect x="35" y="70" width="30" height="8" fill="#ef4444" />
-                                            <ellipse cx="44" cy="76" rx="2.5" ry="3.5" fill="#fff" />
-                                            <ellipse cx="56" cy="76" rx="2.5" ry="3.5" fill="#fff" />
+                                            <path d="M 36 71 C 36 86, 64 86, 64 71 Z" fill="#ef4444" />
+                                            <rect x="36" y="68" width="28" height="6" fill="#ef4444" />
+                                            <ellipse cx="44" cy="75" rx="2.5" ry="4" fill="#ede6d5" />
+                                            <ellipse cx="56" cy="75" rx="2.5" ry="4" fill="#ede6d5" />
 
-                                            <!-- Head -->
-                                            <circle cx="50" cy="45" r="22" fill="#1e1e1e" />
+                                            <!-- Head Base -->
+                                            <circle cx="50" cy="44" r="21" fill="#1e1e1e" />
                                             
-                                            <!-- Face mask -->
-                                            <path d="M 50 29 C 39 29, 36 40, 37 51 C 39 59, 45 62, 50 62 C 55 62, 61 59, 63 51 C 64 40, 61 29, 50 29 Z" fill="#ede6d5" />
-                                            <path d="M 50 35 C 44 35, 41 41, 41 49 C 41 54, 45 57, 50 57 C 55 57, 59 54, 59 49 C 59 41, 56 35, 50 35 Z" fill="#ede6d5" />
-                                            <!-- Eyes -->
-                                            <ellipse cx="45" cy="42" rx="3.2" ry="7" fill="#1e1e1e" id="m-eye-l" />
-                                            <ellipse cx="55" cy="42" rx="3.2" ry="7" fill="#1e1e1e" id="m-eye-r" />
+                                            <!-- Face Mask -->
+                                            <path d="M 50 28 C 42 28, 38 35, 38 46 C 38 52, 42 54, 50 54 C 58 54, 62 52, 62 46 C 62 35, 62 28, 50 28 Z" fill="#ede6d5" />
+                                            <path d="M 50 34 C 44 34, 40 40, 40 48 C 40 53, 44 55, 50 55 C 56 55, 60 53, 60 48 C 60 40, 56 34, 50 34 Z" fill="#ede6d5" />
+                                            
+                                            <!-- Pie-cut Eyes -->
+                                            <g id="eyes-group">
+                                                <ellipse cx="45" cy="41" rx="3.5" ry="7.5" fill="#ede6d5" stroke="#1e1e1e" stroke-width="0.8" />
+                                                <ellipse cx="45" cy="42" rx="2.2" ry="5.5" fill="#1e1e1e" id="m-eye-l" />
+                                                
+                                                <ellipse cx="55" cy="41" rx="3.5" ry="7.5" fill="#ede6d5" stroke="#1e1e1e" stroke-width="0.8" />
+                                                <ellipse cx="55" cy="42" rx="2.2" ry="5.5" fill="#1e1e1e" id="m-eye-r" />
+                                            </g>
+                                            
                                             <!-- Nose -->
-                                            <ellipse cx="50" cy="50" rx="4.5" ry="2.5" fill="#1e1e1e" />
+                                            <ellipse cx="50" cy="49" rx="4.2" ry="2.2" fill="#1e1e1e" />
                                             <!-- Mouth -->
-                                            <path d="M 42 53 Q 50 58 58 53" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" id="mickey-mouth" />
+                                            <path d="M 42 52 Q 50 57 58 52" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round" id="mickey-mouth" />
                                             
-                                            <!-- Steamboat Willie Hat -->
+                                            <!-- Hat -->
                                             <g id="mickey-hat">
-                                                <rect x="44" y="16" width="12" height="4" rx="1" fill="#1e1e1e" />
-                                                <path d="M 45 16 L 47 10 L 53 10 L 55 16 Z" fill="#ede6d5" stroke="#111" stroke-width="1.2" />
-                                                <circle cx="50" cy="13" r="1" fill="#1e1e1e" />
+                                                <rect x="44" y="15" width="12" height="3" rx="0.8" fill="#1e1e1e" />
+                                                <path d="M 45 15 L 47 9 L 53 9 L 55 15 Z" fill="#ede6d5" stroke="#1e1e1e" stroke-width="1.2" />
+                                                <circle cx="50" cy="12" r="1.0" fill="#1e1e1e" />
                                             </g>
                                         </svg>
                                     </div>
