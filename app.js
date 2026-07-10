@@ -772,7 +772,33 @@ function initTamagotchi() {
     let exp = 0;
     let isSleeping = false;
     let isDead = false;
+    let activeAction = "idle"; // "idle", "feed", "play", "clean", "sleep"
     
+    // Audio click feedback beeps (Web Audio API)
+    function playBeep(frequency = 800, duration = 80) {
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+            const audioCtx = new AudioContextClass();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = "sine";
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
+        } catch (e) {
+            console.warn("Beep audio blocked:", e);
+        }
+    }
+
     // Action locks
     let isWalking = false;
     let isDancing = false;
@@ -1351,12 +1377,29 @@ function initTamagotchi() {
         setTimeout(() => playBeep(1200, 60), 150);
     }
 
-    // Update screen HTML HUD fills
+    // Update screen HTML HUD fills with dynamic color grading
     function updateHUD() {
-        if (hudHunger) hudHunger.style.width = hunger + "%";
-        if (hudLove) hudLove.style.width = love + "%";
-        if (hudClean) hudClean.style.width = clean + "%";
-        if (hudSleep) hudSleep.style.width = sleep + "%";
+        const stats = [
+            { bar: hudHunger, val: hunger },
+            { bar: hudLove, val: love },
+            { bar: hudClean, val: clean },
+            { bar: hudSleep, val: sleep }
+        ];
+        
+        stats.forEach(s => {
+            if (!s.bar) return;
+            s.bar.style.width = s.val + "%";
+            
+            // Set gauge color gradient dynamically based on value
+            if (s.val > 50) {
+                s.bar.style.background = "linear-gradient(90deg, #22c55e, #4ade80)"; // Green
+            } else if (s.val > 25) {
+                s.bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; // Orange/Yellow
+            } else {
+                s.bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)"; // Red
+            }
+        });
+
         if (mickeyLv) mickeyLv.textContent = level;
     }
 
@@ -1381,6 +1424,9 @@ function initTamagotchi() {
 
     // 3D Real-time Animation Loop (60 FPS rendering)
     let lastTime = Date.now();
+    let activeRoomX = 0; // Target Camera X focus
+    let targetX = 0; // Target Mickey X position
+
     function tick() {
         requestAnimationFrame(tick);
         
@@ -1409,7 +1455,7 @@ function initTamagotchi() {
             const dist = targetX - mickeyGroup.position.x;
             mickeyGroup.position.x += Math.sign(dist) * 0.16;
             
-            // Flip facing direction
+            // Flip facing direction when walking profile
             if (dist < 0) {
                 mickeyGroup.rotation.y = -Math.PI / 2; // facing left
             } else {
@@ -1433,6 +1479,75 @@ function initTamagotchi() {
                 legR.rotation.x = 0;
                 armL.rotation.x = 0;
                 armR.rotation.x = 0;
+
+                // --- TRIGGER STATE TRANSITION ON ARRIVAL AT TARGET X ---
+                if (activeAction === "feed" && !isEating) {
+                    isEating = true;
+                    actionText.textContent = "Yum Yum ! C'est délicieux ! 🥣";
+
+                    setTimeout(() => {
+                        hunger = Math.min(100, hunger + 20);
+                        gainExp();
+                        updateHUD();
+
+                        actionText.textContent = "Mickey retourne au salon";
+                        activeRoomX = 0;
+                        targetX = 0;
+                        isEating = false;
+                        activeAction = "idle";
+                        gloveR.position.set(0.9, 0.8, 0); // reset glove pos
+                    }, 3500);
+                } 
+                else if (activeAction === "play" && !isDancing) {
+                    isDancing = true;
+                    actionText.textContent = "C'est l'heure du DISCO ! 🎵💃";
+
+                    setTimeout(() => {
+                        love = Math.min(100, love + 20);
+                        gainExp();
+                        updateHUD();
+
+                        actionText.textContent = "Danse terminée ! Mickey s'est bien amusé";
+                        isDancing = false;
+                        activeAction = "idle";
+                        armL.rotation.set(0, 0, Math.PI / 4);
+                        armR.rotation.set(0, 0, -Math.PI / 4);
+                    }, 4000);
+                }
+                else if (activeAction === "clean" && !isPooping) {
+                    isPooping = true;
+                    actionText.textContent = "EXPLOSION DE SPARKLES !!! ✨💩";
+
+                    // Initialize particles
+                    sparkles.forEach(s => {
+                        s.mesh.position.set(77.8, 1.5, -3.5);
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 0.04 + Math.random() * 0.08;
+                        s.vx = Math.cos(angle) * speed + 0.04;
+                        s.vy = 0.04 + Math.random() * 0.08;
+                        s.vz = Math.sin(angle) * speed;
+                        s.age = Math.floor(Math.random() * 30);
+                    });
+
+                    setTimeout(() => {
+                        clean = Math.min(100, clean + 25);
+                        updateHUD();
+
+                        actionText.textContent = "Mickey est tout propre ! Retour au salon";
+                        activeRoomX = 0;
+                        targetX = 0;
+                        isPooping = false;
+                        activeAction = "idle";
+                    }, 3500);
+                }
+                else if (activeAction === "sleep" && !isSleeping) {
+                    isSleeping = true;
+                    actionText.textContent = "Bonne nuit Mickey ! Zzz... 💤";
+                    // Dim lights
+                    ambientLight.intensity = 0.15;
+                    dirLight.intensity = 0;
+                    updateHUD();
+                }
             }
         } else {
             isWalking = false;
@@ -1440,10 +1555,10 @@ function initTamagotchi() {
 
         // --- SPECIFIC ACTION ANIMATIONS ---
         
-        // 1. Disco Dancing loop
+        // 1. Disco Dancing loop (faces the camera while wiggling)
         if (isDancing) {
             const time = now * 0.015;
-            mickeyGroup.rotation.y = Math.sin(time) * 0.5 + Math.PI / 2;
+            mickeyGroup.rotation.y = Math.sin(time) * 0.5; // slight head wiggle facing camera
             mickeyGroup.position.y = 1.8 + Math.abs(Math.sin(time * 0.8)) * 0.3;
             // Wiggle arms up and down
             armL.rotation.z = Math.PI / 4 + Math.sin(time) * 0.8;
@@ -1455,9 +1570,8 @@ function initTamagotchi() {
         // 2. Kitchen Eating wiggling
         if (isEating) {
             const time = now * 0.008;
-            // Sitting pos
             mickeyGroup.position.set(117.4, 1.25, -3.2); // Sat on kitchen chair
-            mickeyGroup.rotation.y = Math.PI / 2;
+            mickeyGroup.rotation.y = Math.PI / 2; // Facing the dining table
             legL.rotation.x = -Math.PI / 2;
             legR.rotation.x = -Math.PI / 2;
             // Hand feeding spoon
@@ -1470,9 +1584,9 @@ function initTamagotchi() {
 
         // 3. Bathroom Toilet Pooping
         if (isPooping) {
-            // Sitting pos on toilet seat
+            // Sitting pos on toilet seat rotated slightly to show cheeks and front
             mickeyGroup.position.set(77.2, 1.4, -3.5);
-            mickeyGroup.rotation.y = Math.PI / 2;
+            mickeyGroup.rotation.y = Math.PI / 5; 
             legL.rotation.x = -Math.PI / 2;
             legR.rotation.x = -Math.PI / 2;
             // Slide shorts down
@@ -1522,10 +1636,10 @@ function initTamagotchi() {
             pupilL.visible = true; pupilR.visible = true;
         }
 
-        // Default neutral bobbing if idle standing
+        // Default neutral bobbing if idle standing (MICKEY FACES FRONT DIRECTLY!)
         if (!isWalking && !isDancing && !isEating && !isPooping && !isSleeping) {
             mickeyGroup.position.y = 1.8 + Math.sin(now * 0.002) * 0.08;
-            mickeyGroup.rotation.y = Math.PI / 2; // face right
+            mickeyGroup.rotation.y = 0; // Look directly at the camera / user!
             legL.rotation.x = 0; legR.rotation.x = 0;
             armL.rotation.z = Math.PI / 4;
             armR.rotation.z = -Math.PI / 4;
@@ -1536,120 +1650,57 @@ function initTamagotchi() {
 
     // Trigger AI walks inside the room coordinates occasionally when idle
     setInterval(() => {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating || activeAction !== "idle") return;
         if (Math.random() < 0.4) {
             targetX = -5 + Math.floor(Math.random() * 11); // Random room X target
         }
     }, 5000);
 
-    // --- INTERACTIVE CARTON BUBBLE BUTTONS TRiggers ---
+    // --- INTERACTIVE BUBBLE BUTTONS CLICK LISTENERS ---
 
     // 1. NOURRIR BUTTON
     btnFeed.addEventListener("click", () => {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        if (isDead || isSleeping || activeAction !== "idle") return;
         triggerFeedBeep();
 
-        isEating = true;
+        activeAction = "feed";
         actionText.textContent = "Mickey va manger dans la cuisine...";
         activeRoomX = 120; // focus kitchen
         targetX = 117; // dining chair position
-
-        // Sit, eat bowl cereal, and pan camera back
-        setTimeout(() => {
-            actionText.textContent = "Yum Yum ! C'est délicieux ! 🥣";
-            hunger = Math.min(100, hunger + 20);
-            gainExp();
-            updateHUD();
-
-            setTimeout(() => {
-                actionText.textContent = "Mickey retourne au salon";
-                activeRoomX = 0;
-                targetX = 0;
-                // reset chair posture
-                legL.rotation.x = 0; legR.rotation.x = 0;
-                isEating = false;
-                gloveR.position.set(0.9, 0.8, 0); // reset glove pos
-            }, 3000);
-        }, 3500);
     });
 
-    // 2. JOUER BUTTON (DISCO)
+    // 2. JOUER BUTTON
     btnPlay.addEventListener("click", () => {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        if (isDead || isSleeping || activeAction !== "idle") return;
         triggerPlayBeep();
 
-        isDancing = true;
-        actionText.textContent = "C'est l'heure du DISCO ! 🎵💃";
+        activeAction = "play";
+        actionText.textContent = "Mickey va danser au salon...";
         activeRoomX = 0;
         targetX = 0;
-
-        setTimeout(() => {
-            actionText.textContent = "Danse terminée ! Mickey s'est bien amusé";
-            love = Math.min(100, love + 20);
-            gainExp();
-            updateHUD();
-            
-            isDancing = false;
-            armL.rotation.set(0, 0, Math.PI / 4);
-            armR.rotation.set(0, 0, -Math.PI / 4);
-        }, 4000);
     });
 
-    // 3. TOILETTE BUTTON (CACA SPARKLES)
+    // 3. TOILETTE BUTTON
     btnClean.addEventListener("click", () => {
-        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+        if (isDead || isSleeping || activeAction !== "idle") return;
         playBeep(450, 150);
 
-        isPooping = true;
+        activeAction = "clean";
         actionText.textContent = "Mickey va au cabinet...";
         activeRoomX = 80;
         targetX = 77.2; // Toilet position
-
-        // Initialize particles
-        sparkles.forEach(s => {
-            s.mesh.position.set(77.8, 1.5, -3.5);
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 0.04 + Math.random() * 0.08;
-            s.vx = Math.cos(angle) * speed + 0.04;
-            s.vy = 0.04 + Math.random() * 0.08;
-            s.vz = Math.sin(angle) * speed;
-            s.age = Math.floor(Math.random() * 30);
-        });
-
-        setTimeout(() => {
-            actionText.textContent = "EXPLOSION DE SPARKLES !!! ✨💩";
-            clean = Math.min(100, clean + 25);
-            updateHUD();
-
-            setTimeout(() => {
-                actionText.textContent = "Mickey est tout propre ! Retour au salon";
-                activeRoomX = 0;
-                targetX = 0;
-                legL.rotation.x = 0; legR.rotation.x = 0;
-                isPooping = false;
-            }, 3000);
-        }, 3500);
     });
 
-    // 4. SOMMEIL BUTTON (LIGHTS OUT)
+    // 4. SOMMEIL BUTTON
     btnSleep.addEventListener("click", () => {
-        if (isDead || isWalking || isDancing || isPooping || isEating) return;
+        if (isDead || (activeAction !== "idle" && activeAction !== "sleep")) return;
         playBeep(320, 180);
 
         if (!isSleeping) {
-            // Sleep sequence
+            activeAction = "sleep";
             actionText.textContent = "Mickey va se coucher...";
             activeRoomX = 40;
             targetX = 32; // Bed X position
-
-            setTimeout(() => {
-                actionText.textContent = "Bonne nuit Mickey ! Zzz... 💤";
-                isSleeping = true;
-                // Dim lights
-                ambientLight.intensity = 0.15;
-                dirLight.intensity = 0;
-                updateHUD();
-            }, 3000);
         } else {
             // Wake up
             actionText.textContent = "Debout Mickey ! Le soleil se lève ! ☀️";
@@ -1659,6 +1710,7 @@ function initTamagotchi() {
             dirLight.intensity = 0.8;
             activeRoomX = 0;
             targetX = 0;
+            activeAction = "idle";
             updateHUD();
         }
     });
