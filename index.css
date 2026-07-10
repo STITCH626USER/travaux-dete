@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 :root {
     --ios-bg: #F3F4F6;
     --ios-card-bg: #FFFFFF;
@@ -1107,89 +1109,94 @@ input:checked + .slider:before {
     }
 }
 
-/* 🛋️ ROOM BACKGROUND LAYERS & STYLING */
-.room-background {
+/* 🌳 OUTDOOR PIXEL ART BACKDROP & SYSTEM */
+.pixel-background {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 1;
-    pointer-events: none;
+    overflow: hidden;
 }
 
-.room-wall {
+.pixel-sky {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 98px;
-    background: repeating-linear-gradient(90deg, #f0f9ff, #f0f9ff 10px, #e0f2fe 10px, #e0f2fe 20px);
+    height: 70px;
+    background: #00e5ff; /* Bright Sky Blue */
+    background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 100% 2px;
 }
 
-.room-painting {
+/* Pixel Sun */
+.pixel-sun {
     position: absolute;
-    top: 14px;
-    left: 45%;
-    font-size: 13px;
-    background: #fff;
-    border: 1px solid #475569;
-    padding: 1px 3px;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
-    border-radius: 2px;
-}
-
-.room-window {
-    position: absolute;
-    top: 12px;
-    right: 15%;
+    top: 15px;
+    right: 14%;
     width: 24px;
-    height: 32px;
-    background: linear-gradient(to bottom, #bae6fd, #7dd3fc);
-    border: 2px solid #78350f;
-    border-radius: 4px 4px 0 0;
-    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+    height: 24px;
+    background: #facc15;
+    border: 2px solid #000;
+    box-shadow: 0 0 10px rgba(250,204,21,0.6);
 }
 
-.room-window::after {
+/* Pixel Cloud matching photo */
+.pixel-cloud {
+    position: absolute;
+    top: 22px;
+    left: 10%;
+    width: 32px;
+    height: 12px;
+    background: #ffffff;
+    border: 2.2px solid #000;
+}
+.pixel-cloud::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 10px;
-    width: 2px;
-    height: 100%;
-    background-color: #78350f;
+    top: -6px;
+    left: 6px;
+    width: 16px;
+    height: 6px;
+    background: #ffffff;
+    border-top: 2.2px solid #000;
+    border-left: 2.2px solid #000;
+    border-right: 2.2px solid #000;
 }
 
-.room-couch {
+/* Purple Mountains matching photo */
+.pixel-mountains {
     position: absolute;
-    bottom: 12px;
-    left: 4%;
-    z-index: 6;
+    bottom: 24px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: #b185db; /* Pinkish-purple hills */
+    border-top: 2.2px solid #000;
+    clip-path: polygon(0% 100%, 0% 50%, 15% 10%, 30% 60%, 50% 20%, 70% 70%, 85% 30%, 100% 60%, 100% 100%);
 }
 
-.room-bed-base {
+/* Tree on the Right matching photo */
+.pixel-tree {
     position: absolute;
-    bottom: 12px;
-    right: 2%;
-    z-index: 4;
+    bottom: 24px;
+    right: 8%;
+    width: 30px;
+    height: 50px;
+    z-index: 3;
 }
 
-.room-bed-blanket {
-    position: absolute;
-    bottom: 12px;
-    right: 2%;
-    z-index: 12;
-}
-
-.room-floor {
+/* Green Grass land matching photo */
+.pixel-grass {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 16px;
-    background: linear-gradient(to bottom, #ca8a04, #854d0e);
-    border-top: 1.5px solid #78350f;
+    height: 28px;
+    background: #4ade80; /* Grass Green */
+    border-top: 2.2px solid #000;
 }
 
 /* 🚶‍♂️ Leg Walking Animations */
@@ -1206,8 +1213,8 @@ input:checked + .slider:before {
 }
 
 @keyframes walkBob {
-    from { bottom: 6px; }
-    to { bottom: 9px; }
+    from { bottom: 8px; }
+    to { bottom: 11px; }
 }
 
 @keyframes walkLegL {
@@ -1220,7 +1227,125 @@ input:checked + .slider:before {
     to { transform: rotate(-25deg); }
 }
 
-/* Lights Out sleeping dark mode screen layer */
+/* Sleeping Position on Outdoor Sleeping Bag */
+.pet-wrapper.lying-down {
+    left: 74% !important;
+    bottom: 12px !important;
+    transform: rotate(-90deg) translate(-4px, 4px) scale(0.7) !important;
+    z-index: 5 !important;
+    animation: none !important;
+}
+
+/* Toilet Bowl placement */
+#toilet-bowl {
+    position: absolute;
+    bottom: 12px;
+    left: 14%;
+    z-index: 8;
+    animation: fadeInToilet 0.2s ease forwards;
+}
+
+@keyframes fadeInToilet {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Multicolored Sparkles */
+.sparkle {
+    position: absolute;
+    font-size: 14px;
+    animation: shootSparkle 0.8s forwards cubic-bezier(0.25, 1, 0.5, 1);
+    pointer-events: none;
+    z-index: 25;
+}
+
+@keyframes shootSparkle {
+    0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--dx), var(--dy)) scale(1.4);
+        opacity: 0;
+    }
+}
+
+/* 📲 RETRO LCD SCREEN TEXTS & LAYOUT */
+.modern-screen {
+    background: #00e5ff !important;
+    border: 4px solid #000000 !important;
+    border-radius: 8px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Top row icons styled blocky like the image */
+.lcd-pixel-icons {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    z-index: 10;
+}
+
+.pixel-icon-btn {
+    opacity: 0.45;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.pixel-icon-btn:hover, .pixel-icon-btn.active {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.pixel-icon-btn.blinking {
+    animation: pixelBlink 0.5s infinite alternate;
+}
+
+@keyframes pixelBlink {
+    from { opacity: 0.3; }
+    to { opacity: 1; }
+}
+
+/* Header Text (Lv. 5) */
+.pixel-header-text {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #000000;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    z-index: 5;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
+}
+
+/* Bottom Text (HAPPINESS: 90%) */
+.pixel-bottom-text {
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #000000;
+    font-weight: 800;
+    text-transform: uppercase;
+    z-index: 15;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
+}
+
+/* Lights Out dark overlay */
 .lcd-display.dark-mode::before {
     content: '';
     position: absolute;
@@ -1228,7 +1353,43 @@ input:checked + .slider:before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(15, 23, 42, 0.65);
+    background-color: rgba(10, 25, 47, 0.7);
     z-index: 100;
+    pointer-events: none;
+}
+
+/* Custom Yellow Casing like the photo */
+.tamagotchi-shell {
+    background: linear-gradient(135deg, #fef08a, #facc15) !important;
+    border: 8px solid #ca8a04 !important;
+    border-radius: 40px 40px 48px 48px !important;
+    box-shadow: 
+        0 10px 0 #854d0e,
+        inset 2px 2px 5px rgba(255,255,255,0.5),
+        0 12px 20px rgba(0,0,0,0.3) !important;
+}
+
+.tamagotchi-screen-bezel {
+    background-color: #111827 !important;
+    border-color: #1f2937 !important;
+}
+
+.physical-btn {
+    box-shadow: 
+        0 3px 0 #1e293b,
+        inset 1px 1px 2px rgba(255,255,255,0.4) !important;
+}
+
+/* CRT Screen Effect overlay to mimic pixel scanlines */
+.screen-glass::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+    background-size: 100% 3px, 6px 100%;
+    z-index: 200;
     pointer-events: none;
 }
