@@ -909,7 +909,6 @@ function initTamagotchi() {
         petWrapper.classList.add("pet-disco");
 
         love = Math.min(100, love + 20);
-        createFloatingText("🕺 DISCO! ❤️", "#7c3aed");
         updateScreen();
 
         setTimeout(() => {
