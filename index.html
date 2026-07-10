@@ -97,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- 🎮 MICRO-TAMAGOTCHI EMULATOR -->
+            <!-- 🎮 COZY ROOM TAMAGOTCHI EMULATOR -->
             <section class="tamagotchi-section">
                 <div class="tamagotchi-container">
                     <div class="tamagotchi-shell">
@@ -110,6 +110,41 @@
                                     <span id="stat-sleep">💤 ❚❚❚❚❚</span>
                                 </div>
                                 <div class="lcd-display" id="lcd-display">
+                                    <!-- 🛋️ ROOM BACKGROUND LAYERS -->
+                                    <div class="room-background">
+                                        <!-- Wallpaper Wall -->
+                                        <div class="room-wall">
+                                            <!-- Steamboat Willie Painting -->
+                                            <div class="room-painting">⛵</div>
+                                            <!-- Window -->
+                                            <div class="room-window">
+                                                <div class="window-sky"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Sofa on the Left -->
+                                        <div class="room-couch">
+                                            <svg viewBox="0 0 40 30" width="35" height="25">
+                                                <path d="M 5 22 L 35 22 L 35 14 C 35 11, 32 9, 30 9 L 10 9 C 8 9, 5 11, 5 14 Z" fill="#f43f5e" stroke="#be123c" stroke-width="1" />
+                                                <rect x="7" y="16" width="26" height="6" fill="#e11d48" rx="1" />
+                                                <circle cx="8" cy="24" r="2.2" fill="#78350f" />
+                                                <circle cx="32" cy="24" r="2.2" fill="#78350f" />
+                                            </svg>
+                                        </div>
+                                        
+                                        <!-- Bed base and mattress (Layer 2) -->
+                                        <div class="room-bed-base">
+                                            <svg viewBox="0 0 50 35" width="46" height="32">
+                                                <rect x="2" y="18" width="46" height="10" fill="#78350f" rx="1" />
+                                                <rect x="2" y="5" width="4" height="23" fill="#78350f" rx="1" />
+                                                <rect x="6" y="14" width="40" height="5" fill="#ffffff" stroke="#94a3b8" stroke-width="0.8" rx="1" />
+                                            </svg>
+                                        </div>
+
+                                        <!-- Floor line at bottom -->
+                                        <div class="room-floor"></div>
+                                    </div>
+
                                     <!-- Disco Ball (flashes/spins) -->
                                     <div id="disco-ball" class="hidden">
                                         <svg viewBox="0 0 40 40" width="35" height="35">
@@ -121,7 +156,7 @@
 
                                     <!-- Toilet Bowl (initially hidden) -->
                                     <div id="toilet-bowl" class="hidden">
-                                        <svg viewBox="0 0 60 60" width="55" height="55">
+                                        <svg viewBox="0 0 60 60" width="45" height="45">
                                             <rect x="10" y="5" width="14" height="32" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" rx="2" />
                                             <circle cx="17" cy="10" r="2.5" fill="#cbd5e1" stroke="#475569" stroke-width="1" />
                                             <path d="M 24 24 L 28 52 L 44 52 L 48 24 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" />
@@ -131,9 +166,9 @@
                                     </div>
 
                                     <!-- Mickey Full Body SVG Pet -->
-                                    <div class="pet-wrapper" id="pet-wrapper">
-                                        <svg viewBox="0 0 100 120" width="75" height="90" id="mickey-svg">
-                                            <!-- Tail (Classic 1928 Mickey tail!) -->
+                                    <div class="pet-wrapper" id="pet-wrapper" style="left: 45%; bottom: 6px;">
+                                        <svg viewBox="0 0 100 120" width="70" height="85" id="mickey-svg">
+                                            <!-- Tail -->
                                             <path d="M 38 82 Q 15 90 8 75" fill="none" stroke="#1e1e1e" stroke-width="2.5" stroke-linecap="round" id="mickey-tail" />
                                             
                                             <!-- Ears -->
@@ -141,8 +176,8 @@
                                             <circle cx="72" cy="24" r="14" fill="#1e1e1e" />
                                             
                                             <!-- Legs -->
-                                            <path d="M 42 85 L 42 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" />
-                                            <path d="M 58 85 L 58 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" />
+                                            <path d="M 42 85 L 42 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" id="leg-l" style="transform-origin: 42px 85px;" />
+                                            <path d="M 58 85 L 58 108" fill="none" stroke="#1e1e1e" stroke-width="4.5" stroke-linecap="round" id="leg-r" style="transform-origin: 58px 85px;" />
 
                                             <!-- Shoes -->
                                             <ellipse cx="36" cy="110" rx="12" ry="8" fill="#facc15" stroke="#ca8a04" stroke-width="1.2" />
@@ -206,6 +241,16 @@
                                                 <path d="M 45 15 L 47 9 L 53 9 L 55 15 Z" fill="#ede6d5" stroke="#1e1e1e" stroke-width="1.2" />
                                                 <circle cx="50" cy="12" r="1.0" fill="#1e1e1e" />
                                             </g>
+                                        </svg>
+                                    </div>
+
+                                    <!-- Bed Blanket and Pillow cover (Layer 6) -->
+                                    <div class="room-bed-blanket" id="room-bed-blanket">
+                                        <svg viewBox="0 0 50 35" width="46" height="32">
+                                            <!-- Blanket -->
+                                            <path d="M 16 13 L 46 13 L 46 22 L 16 22 Z" fill="#3b82f6" />
+                                            <!-- Pillow details -->
+                                            <rect x="8" y="10" width="8" height="5" fill="#e2e8f0" rx="1" style="opacity: 0.8;" />
                                         </svg>
                                     </div>
                                     

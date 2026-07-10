@@ -1038,14 +1038,18 @@ input:checked + .slider:before {
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
-/* Toilet seat sitting adjustments */
+/* Toilet seat and room adjustments */
 .pet-wrapper {
     z-index: 10;
-    transition: transform 0.2s ease;
+    position: absolute;
+    bottom: 6px;
+    transform-origin: bottom center;
 }
 
 .pet-wrapper.sitting {
-    transform: translateY(16px) scale(0.95);
+    bottom: 12px !important;
+    transform: scale(0.9) !important;
+    z-index: 9 !important;
 }
 
 /* Pull down pants and expose cute buttocks on toilet */
@@ -1062,18 +1066,25 @@ input:checked + .slider:before {
     transition: transform 0.2s ease;
 }
 
+.pet-wrapper.lying-down {
+    left: 76% !important;
+    bottom: 16px !important;
+    transform: rotate(-90deg) translate(-4px, 4px) scale(0.7) !important;
+    z-index: 10 !important;
+    animation: none !important;
+}
+
 #toilet-bowl {
     position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
+    bottom: 10px;
+    left: 16%;
+    z-index: 8;
     animation: fadeInToilet 0.2s ease forwards;
 }
 
 @keyframes fadeInToilet {
-    from { opacity: 0; transform: translate(-50%, 10px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Multicolored Sparkles */
@@ -1094,4 +1105,130 @@ input:checked + .slider:before {
         transform: translate(var(--dx), var(--dy)) scale(1.4);
         opacity: 0;
     }
+}
+
+/* 🛋️ ROOM BACKGROUND LAYERS & STYLING */
+.room-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.room-wall {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 98px;
+    background: repeating-linear-gradient(90deg, #f0f9ff, #f0f9ff 10px, #e0f2fe 10px, #e0f2fe 20px);
+}
+
+.room-painting {
+    position: absolute;
+    top: 14px;
+    left: 45%;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid #475569;
+    padding: 1px 3px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    border-radius: 2px;
+}
+
+.room-window {
+    position: absolute;
+    top: 12px;
+    right: 15%;
+    width: 24px;
+    height: 32px;
+    background: linear-gradient(to bottom, #bae6fd, #7dd3fc);
+    border: 2px solid #78350f;
+    border-radius: 4px 4px 0 0;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+.room-window::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10px;
+    width: 2px;
+    height: 100%;
+    background-color: #78350f;
+}
+
+.room-couch {
+    position: absolute;
+    bottom: 12px;
+    left: 4%;
+    z-index: 6;
+}
+
+.room-bed-base {
+    position: absolute;
+    bottom: 12px;
+    right: 2%;
+    z-index: 4;
+}
+
+.room-bed-blanket {
+    position: absolute;
+    bottom: 12px;
+    right: 2%;
+    z-index: 12;
+}
+
+.room-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 16px;
+    background: linear-gradient(to bottom, #ca8a04, #854d0e);
+    border-top: 1.5px solid #78350f;
+}
+
+/* 🚶‍♂️ Leg Walking Animations */
+.pet-wrapper.walking {
+    animation: walkBob 0.25s infinite alternate ease-in-out;
+}
+
+.pet-wrapper.walking #leg-l {
+    animation: walkLegL 0.25s infinite alternate ease-in-out !important;
+}
+
+.pet-wrapper.walking #leg-r {
+    animation: walkLegR 0.25s infinite alternate ease-in-out !important;
+}
+
+@keyframes walkBob {
+    from { bottom: 6px; }
+    to { bottom: 9px; }
+}
+
+@keyframes walkLegL {
+    from { transform: rotate(-25deg); }
+    to { transform: rotate(25deg); }
+}
+
+@keyframes walkLegR {
+    from { transform: rotate(25deg); }
+    to { transform: rotate(-25deg); }
+}
+
+/* Lights Out sleeping dark mode screen layer */
+.lcd-display.dark-mode::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.65);
+    z-index: 100;
+    pointer-events: none;
 }

@@ -735,26 +735,6 @@ function setupInstallBanner() {
 
     btnInstall.addEventListener('click', () => {
         if (!deferredPrompt) return;
-        // Hide the app install banner
-        installBanner.classList.add("hidden");
-        // Show the prompt
-        deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            } else {
-                console.log('User dismissed the install prompt');
-            }
-            deferredPrompt = null;
-        });
-    });
-
-    btnCancelInstall.addEventListener('click', () => {
-        installBanner.classList.add("hidden");
-    });
-}
-
 // ==========================================
 // 🎮 TAMAGOTCHI EMULATOR LOGIC
 // ==========================================
@@ -766,6 +746,12 @@ function initTamagotchi() {
     let sleep = 80;
     let isSleeping = false;
     let isDead = false;
+    
+    // Activity locks
+    let isWalking = false;
+    let isDancing = false;
+    let isPooping = false;
+    let isEating = false;
 
     // DOM Elements
     const statFood = document.getElementById("stat-food");
@@ -795,10 +781,13 @@ function initTamagotchi() {
         return;
     }
 
-    // Make Mickey bounce by default
+    // Set transitions on pet-wrapper for smooth HTML movement
+    petWrapper.style.transition = "left 1s linear, transform 0.2s ease, bottom 0.2s ease";
+
+    // Start with Mickey bouncing
     petWrapper.classList.add("pet-bounce");
 
-    // Helper to generate bars
+    // Helper to generate status bars
     function getBar(val) {
         const total = 5;
         const active = Math.round((val / 100) * total);
@@ -824,21 +813,78 @@ function initTamagotchi() {
         }
     }
 
-    // Float text creator (+15$, +20❤️)
+    // Floating text feedback (stats etc)
     function createFloatingText(text, color = "#111827") {
         const ft = document.createElement("div");
         ft.className = "floating-text";
         ft.textContent = text;
         ft.style.color = color;
-        ft.style.left = (40 + Math.random() * 20) + "%";
+        ft.style.left = (parseFloat(petWrapper.style.left) || 45) + "%";
         ft.style.top = "30%";
         lcdDisplay.appendChild(ft);
         setTimeout(() => ft.remove(), 800);
     }
 
-    // Spawn Multicolored Sparkles from Mickey's butt
+    // Path walking logic
+    function walkTo(targetLeftPct, callback) {
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) {
+            if (callback) callback(false);
+            return;
+        }
+
+        isWalking = true;
+        const currentLeft = parseFloat(petWrapper.style.left) || 45;
+        const delta = targetLeftPct - currentLeft;
+
+        // Set direction (scaleX)
+        if (delta < 0) {
+            petWrapper.style.transform = "scaleX(-1)";
+        } else {
+            petWrapper.style.transform = "scaleX(1)";
+        }
+
+        petWrapper.classList.remove("pet-bounce");
+        petWrapper.classList.add("walking");
+
+        // Calculate travel time based on distance (35ms per percent)
+        const duration = Math.abs(delta) * 35;
+        petWrapper.style.transition = `left ${duration}ms linear, transform 0.2s ease, bottom 0.2s ease`;
+        
+        // Trigger position update
+        petWrapper.style.left = targetLeftPct + "%";
+
+        setTimeout(() => {
+            petWrapper.classList.remove("walking");
+            isWalking = false;
+            
+            // Restore default posture if no other state active
+            if (!isSleeping && !isDancing && !isPooping && !isEating) {
+                petWrapper.classList.add("pet-bounce");
+            }
+            if (callback) callback(true);
+        }, duration);
+    }
+
+    // Walking AI: random walks when idle
+    let aiTimer = null;
+    function runWalkingAI() {
+        if (aiTimer) clearInterval(aiTimer);
+        aiTimer = setInterval(() => {
+            if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+            
+            // 35% chance to walk somewhere
+            if (Math.random() < 0.35) {
+                // Random position in safe zone (between couch at 16% and bed at 65%)
+                const target = 16 + Math.floor(Math.random() * 45); 
+                walkTo(target);
+            }
+        }, 5000);
+    }
+    runWalkingAI();
+
+    // Spawn Multicolored Sparkles
     function spawnSparkles() {
-        const count = 16;
+        const count = 18;
         const colors = ["#ff007f", "#00ffff", "#39ff14", "#ff00ff", "#ffff00", "#ff7f00", "#ff3b30", "#30d158", "#0a84ff", "#bf5af2"];
         const icons = ["✨", "✦", "★", "⭐", "💫"];
         for (let i = 0; i < count; i++) {
@@ -847,7 +893,6 @@ function initTamagotchi() {
             sparkle.textContent = icons[Math.floor(Math.random() * icons.length)];
             sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
             
-            // Random direction
             const angle = Math.random() * Math.PI * 2;
             const distance = 40 + Math.random() * 60;
             const dx = Math.cos(angle) * distance;
@@ -856,122 +901,174 @@ function initTamagotchi() {
             sparkle.style.setProperty("--dx", dx + "px");
             sparkle.style.setProperty("--dy", dy + "px");
             
-            // Positioning near the butt area of Mickey (around the red pants)
-            sparkle.style.left = "48%";
-            sparkle.style.bottom = "24px";
+            sparkle.style.left = (parseFloat(petWrapper.style.left) || 45) + "%";
+            sparkle.style.bottom = "20px";
             
             lcdSparkleContainer.appendChild(sparkle);
             setTimeout(() => sparkle.remove(), 800);
         }
     }
 
-    // Feed action (Dollar bills!)
+    // Feed action: walk to center, eat falling dollar
     btnFeed.addEventListener("click", () => {
-        if (isDead || isSleeping) return;
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
 
-        // Spawn dollar bill 💵
-        const bill = document.createElement("div");
-        bill.className = "dollar-bill";
-        bill.textContent = "💵";
-        bill.style.left = (35 + Math.random() * 30) + "%";
-        bill.style.top = "10px";
-        lcdFoodContainer.appendChild(bill);
+        isEating = true;
+        // Walk to center first
+        walkTo(45, (success) => {
+            if (!success) {
+                isEating = false;
+                return;
+            }
 
-        // Animate Mickey looking up and eating
-        setTimeout(() => {
-            bill.remove();
-            
-            // Eat animation
+            // Spawn dollar bill 💵
+            const bill = document.createElement("div");
+            bill.className = "dollar-bill";
+            bill.textContent = "💵";
+            bill.style.left = "48%";
+            bill.style.top = "10px";
+            lcdFoodContainer.appendChild(bill);
+
+            setTimeout(() => {
+                bill.remove();
+                
+                petWrapper.classList.remove("pet-bounce");
+                petWrapper.classList.add("pet-eating");
+                
+                // Open mouth
+                mickeyMouth.setAttribute("d", "M 44 56 Q 50 63 56 56");
+
+                hunger = Math.min(100, hunger + 20);
+                createFloatingText("+20 💵", "#047857");
+                updateScreen();
+
+                setTimeout(() => {
+                    petWrapper.classList.remove("pet-eating");
+                    petWrapper.classList.add("pet-bounce");
+                    mickeyMouth.setAttribute("d", "M 42 52 Q 50 57 58 52");
+                    isEating = false;
+                }, 600);
+            }, 600);
+        });
+    });
+
+    // Play action: walk to center, disco dance
+    btnPlay.addEventListener("click", () => {
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
+
+        isDancing = true;
+        // Walk to center first
+        walkTo(45, (success) => {
+            if (!success) {
+                isDancing = false;
+                return;
+            }
+
+            // Start disco mode
+            lcdDisplay.classList.add("disco-mode");
+            discoBall.classList.remove("hidden");
             petWrapper.classList.remove("pet-bounce");
-            petWrapper.classList.add("pet-eating");
-            
-            // Open mouth
-            mickeyMouth.setAttribute("d", "M 44 56 Q 50 63 56 56");
+            petWrapper.classList.add("pet-disco");
 
-            // Stats increase
-            hunger = Math.min(100, hunger + 20);
-            createFloatingText("+20 💵", "#047857");
+            love = Math.min(100, love + 20);
             updateScreen();
 
             setTimeout(() => {
-                petWrapper.classList.remove("pet-eating");
+                lcdDisplay.classList.remove("disco-mode");
+                discoBall.classList.add("hidden");
+                petWrapper.classList.remove("pet-disco");
                 petWrapper.classList.add("pet-bounce");
-                // Close mouth back to smile
-                mickeyMouth.setAttribute("d", "M 42 53 Q 50 58 58 53");
-            }, 500);
-        }, 550);
+                isDancing = false;
+            }, 3000);
+        });
     });
 
-    // Play action (Disco Dance!)
-    btnPlay.addEventListener("click", () => {
-        if (isDead || isSleeping) return;
-
-        // Toggle disco mode on LCD
-        lcdDisplay.classList.add("disco-mode");
-        discoBall.classList.remove("hidden");
-        petWrapper.classList.remove("pet-bounce");
-        petWrapper.classList.add("pet-disco");
-
-        love = Math.min(100, love + 20);
-        updateScreen();
-
-        setTimeout(() => {
-            lcdDisplay.classList.remove("disco-mode");
-            discoBall.classList.add("hidden");
-            petWrapper.classList.remove("pet-disco");
-            petWrapper.classList.add("pet-bounce");
-        }, 3000); // 3 seconds disco!
-    });
-
-    // Toilet action (Toilet bowl and sparkles!)
+    // Toilet action: walk to toilet, sit & poop
     btnClean.addEventListener("click", () => {
-        if (isDead || isSleeping) return;
+        if (isDead || isSleeping || isWalking || isDancing || isPooping || isEating) return;
 
-        // Make toilet bowl visible
-        if (toiletBowl) toiletBowl.classList.remove("hidden");
-        petWrapper.classList.remove("pet-bounce");
-        petWrapper.classList.add("sitting", "pet-poop");
+        isPooping = true;
+        // Walk to toilet (around 14%)
+        walkTo(14, (success) => {
+            if (!success) {
+                isPooping = false;
+                return;
+            }
 
-        clean = Math.min(100, clean + 25);
-        spawnSparkles();
-        updateScreen();
+            // Toilet bowl slides in/shows
+            if (toiletBowl) toiletBowl.classList.remove("hidden");
+            petWrapper.classList.remove("pet-bounce");
+            petWrapper.classList.add("sitting", "pet-poop");
 
-        setTimeout(() => {
-            if (toiletBowl) toiletBowl.classList.add("hidden");
-            petWrapper.classList.remove("sitting", "pet-poop");
-            petWrapper.classList.add("pet-bounce");
-        }, 2500); // 2.5s sits on toilet
+            clean = Math.min(100, clean + 25);
+            spawnSparkles();
+            updateScreen();
+
+            setTimeout(() => {
+                if (toiletBowl) toiletBowl.classList.add("hidden");
+                petWrapper.classList.remove("sitting", "pet-poop");
+                petWrapper.classList.add("pet-bounce");
+                isPooping = false;
+                
+                // Walk back to a neutral spot
+                setTimeout(() => walkTo(35), 200);
+            }, 2500);
+        });
     });
 
-    // Sleep toggle action
+    // Sleep toggle action: walk to bed, lie down, lights out
     btnSleep.addEventListener("click", () => {
-        if (isDead) return;
+        if (isDead || isWalking || isDancing || isPooping || isEating) return;
 
-        isSleeping = !isSleeping;
-        if (isSleeping) {
-            lcdDisplay.classList.add("dark-mode");
-            lcdSleeping.classList.remove("hidden");
-            petWrapper.classList.remove("pet-bounce");
-
-            // Close eyes (flat lines)
-            eyeL.setAttribute("ry", "0.8");
-            eyeR.setAttribute("ry", "0.8");
-            mickeyMouth.setAttribute("d", "M 45 55 Q 50 56 55 55"); // Small sleeping smile
+        if (!isSleeping) {
+            // Initiate sleep: walk to bed (76%)
+            isSleeping = true; // Set early to prevent AI movement
             
-            createFloatingText("Sleep...", "#1e3a8a");
+            // Temporarily clear isSleeping to allow walking to the bed
+            isSleeping = false;
+            walkTo(76, (success) => {
+                isSleeping = true;
+                if (!success) {
+                    // Force position anyway if failed
+                    petWrapper.style.left = "76%";
+                }
+
+                // Lie down on the bed
+                petWrapper.classList.remove("pet-bounce", "walking");
+                petWrapper.classList.add("lying-down");
+
+                // Lights out
+                lcdDisplay.classList.add("dark-mode");
+                lcdSleeping.classList.remove("hidden");
+
+                // Close eyes
+                eyeL.setAttribute("ry", "0.8");
+                eyeR.setAttribute("ry", "0.8");
+                mickeyMouth.setAttribute("d", "M 45 55 Q 50 56 55 55");
+
+                createFloatingText("Sleep...", "#1e3a8a");
+                updateScreen();
+            });
         } else {
+            // Wake up
+            isSleeping = false;
             lcdDisplay.classList.remove("dark-mode");
             lcdSleeping.classList.add("hidden");
-            petWrapper.classList.add("pet-bounce");
 
             // Open eyes
             eyeL.setAttribute("ry", "7");
             eyeR.setAttribute("ry", "7");
-            mickeyMouth.setAttribute("d", "M 42 53 Q 50 58 58 53"); // Big smile
+            mickeyMouth.setAttribute("d", "M 42 52 Q 50 57 58 52");
             
+            petWrapper.classList.remove("lying-down");
+            petWrapper.classList.add("pet-bounce");
+
             createFloatingText("Réveil !", "#b45309");
+            updateScreen();
+
+            // Walk out of bed to center
+            setTimeout(() => walkTo(45), 200);
         }
-        updateScreen();
     });
 
     // Main Game Loop (runs every 1.5 seconds)
@@ -984,14 +1081,12 @@ function initTamagotchi() {
             love = Math.max(0, love - 1);
             clean = Math.max(0, clean - 0.5);
             
-            // Spawn little floating Zzz
             if (Math.random() > 0.4) {
-                createFloatingText("z", "#1e3a8a");
+                createFloatingText("z", "#93c5fd");
             }
 
-            // Wake up automatically if fully rested
             if (sleep === 100) {
-                btnSleep.click();
+                btnSleep.click(); // Automatic wake up
             }
         } else {
             hunger = Math.max(0, hunger - 2);
@@ -1010,6 +1105,7 @@ function initTamagotchi() {
             if (discoBall) discoBall.classList.add("hidden");
             if (toiletBowl) toiletBowl.classList.add("hidden");
             lcdDisplay.classList.remove("disco-mode");
+            if (aiTimer) clearInterval(aiTimer);
         }
 
         updateScreen();
