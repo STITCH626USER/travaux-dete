@@ -97,42 +97,79 @@
                 </div>
             </div>
 
-            <!-- 🎮 MICRO-TAMAGOTCHI 1928 EMULATOR -->
+            <!-- 🎮 MICRO-TAMAGOTCHI EMULATOR -->
             <section class="tamagotchi-section">
-                <div class="tamagotchi-title">👾 MICRO-TAMAGOTCHI 1928</div>
                 <div class="tamagotchi-container">
                     <div class="tamagotchi-shell">
                         <div class="tamagotchi-screen-bezel">
-                            <div class="screen-glass">
+                            <div class="screen-glass modern-screen">
                                 <div class="lcd-header">
                                     <span id="stat-food">🍔 ❚❚❚❚❚</span>
                                     <span id="stat-love">❤️ ❚❚❚❚❚</span>
+                                    <span id="stat-clean">🧹 ❚❚❚❚❚</span>
                                     <span id="stat-sleep">💤 ❚❚❚❚❚</span>
                                 </div>
                                 <div class="lcd-display" id="lcd-display">
-                                    <!-- Mickey 1928 SVG Pet -->
+                                    <!-- Disco Ball (flashes/spins) -->
+                                    <div id="disco-ball" class="hidden">
+                                        <svg viewBox="0 0 40 40" width="35" height="35">
+                                            <circle cx="20" cy="15" r="10" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" />
+                                            <path d="M 20 5 L 20 25 M 10 15 L 30 15 M 13 8 Q 20 15 27 8 M 13 22 Q 20 15 27 22" stroke="#475569" stroke-width="0.8" fill="none" />
+                                            <line x1="20" y1="0" x2="20" y2="5" stroke="#475569" stroke-width="1.5" />
+                                        </svg>
+                                    </div>
+
+                                    <!-- Mickey Full Body SVG Pet -->
                                     <div class="pet-wrapper" id="pet-wrapper">
-                                        <svg viewBox="0 0 100 100" width="60" height="60" id="mickey-svg">
+                                        <svg viewBox="0 0 100 120" width="75" height="90" id="mickey-svg">
                                             <!-- Ears -->
-                                            <circle cx="25" cy="30" r="18" class="mickey-black" />
-                                            <circle cx="75" cy="30" r="18" class="mickey-black" />
+                                            <circle cx="28" cy="25" r="15" fill="#1e1e1e" />
+                                            <circle cx="72" cy="25" r="15" fill="#1e1e1e" />
+                                            
+                                            <!-- Left Arm -->
+                                            <path d="M 32 60 Q 15 65 24 80 Q 28 80 28 75" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-l" style="transform-origin: 32px 60px;" />
+                                            <circle cx="24" cy="80" r="4.5" fill="#fff" stroke="#111" stroke-width="1" />
+
+                                            <!-- Right Arm -->
+                                            <path d="M 68 60 Q 85 65 76 80 Q 72 80 72 75" fill="none" stroke="#1e1e1e" stroke-width="5" stroke-linecap="round" id="arm-r" style="transform-origin: 68px 60px;" />
+                                            <circle cx="76" cy="80" r="4.5" fill="#fff" stroke="#111" stroke-width="1" />
+
+                                            <!-- Legs -->
+                                            <rect x="38" y="85" width="4" height="20" fill="#1e1e1e" />
+                                            <rect x="58" y="85" width="4" height="20" fill="#1e1e1e" />
+
+                                            <!-- Shoes -->
+                                            <ellipse cx="34" cy="106" rx="10" ry="7" fill="#facc15" stroke="#ca8a04" stroke-width="1" />
+                                            <ellipse cx="66" cy="106" rx="10" ry="7" fill="#facc15" stroke="#ca8a04" stroke-width="1" />
+
+                                            <!-- Torso -->
+                                            <ellipse cx="50" cy="72" rx="15" ry="18" fill="#1e1e1e" />
+                                            
+                                            <!-- Red Shorts -->
+                                            <path d="M 35 72 C 35 88, 65 88, 65 72 Z" fill="#ef4444" />
+                                            <rect x="35" y="70" width="30" height="8" fill="#ef4444" />
+                                            <ellipse cx="44" cy="76" rx="2.5" ry="3.5" fill="#fff" />
+                                            <ellipse cx="56" cy="76" rx="2.5" ry="3.5" fill="#fff" />
+
                                             <!-- Head -->
-                                            <circle cx="50" cy="60" r="28" class="mickey-black" />
+                                            <circle cx="50" cy="45" r="22" fill="#1e1e1e" />
+                                            
                                             <!-- Face mask -->
-                                            <path d="M 50 40 C 36 40, 32 54, 34 68 C 36 78, 44 82, 50 82 C 56 82, 64 78, 66 68 C 68 54, 64 40, 50 40 Z" fill="#ede6d5" class="mickey-skin" />
-                                            <path d="M 50 48 C 42 48, 38 56, 38 66 C 38 72, 43 76, 50 76 C 57 76, 62 72, 62 66 C 62 56, 58 48, 50 48 Z" fill="#ede6d5" class="mickey-skin" />
+                                            <path d="M 50 29 C 39 29, 36 40, 37 51 C 39 59, 45 62, 50 62 C 55 62, 61 59, 63 51 C 64 40, 61 29, 50 29 Z" fill="#ede6d5" />
+                                            <path d="M 50 35 C 44 35, 41 41, 41 49 C 41 54, 45 57, 50 57 C 55 57, 59 54, 59 49 C 59 41, 56 35, 50 35 Z" fill="#ede6d5" />
                                             <!-- Eyes -->
-                                            <ellipse cx="44" cy="56" rx="4" ry="9" class="mickey-eye" id="m-eye-l" />
-                                            <ellipse cx="56" cy="56" rx="4" ry="9" class="mickey-eye" id="m-eye-r" />
+                                            <ellipse cx="45" cy="42" rx="3.2" ry="7" fill="#1e1e1e" id="m-eye-l" />
+                                            <ellipse cx="55" cy="42" rx="3.2" ry="7" fill="#1e1e1e" id="m-eye-r" />
                                             <!-- Nose -->
-                                            <ellipse cx="50" cy="67" rx="5.5" ry="3.2" class="mickey-black" />
+                                            <ellipse cx="50" cy="50" rx="4.5" ry="2.5" fill="#1e1e1e" />
                                             <!-- Mouth -->
-                                            <path d="M 40 71 Q 50 77 60 71" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round" id="mickey-mouth" />
+                                            <path d="M 42 53 Q 50 58 58 53" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" id="mickey-mouth" />
+                                            
                                             <!-- Steamboat Willie Hat -->
                                             <g id="mickey-hat">
-                                                <rect x="42" y="24" width="16" height="5" rx="1.5" class="mickey-black" />
-                                                <path d="M 44 24 L 46 16 L 54 16 L 56 24 Z" fill="#ede6d5" stroke="#111" stroke-width="1.5" class="mickey-hat-top" />
-                                                <circle cx="50" cy="20" r="1.2" class="mickey-black" />
+                                                <rect x="44" y="16" width="12" height="4" rx="1" fill="#1e1e1e" />
+                                                <path d="M 45 16 L 47 10 L 53 10 L 55 16 Z" fill="#ede6d5" stroke="#111" stroke-width="1.2" />
+                                                <circle cx="50" cy="13" r="1" fill="#1e1e1e" />
                                             </g>
                                         </svg>
                                     </div>
@@ -142,22 +179,27 @@
                                     <div id="lcd-death" class="hidden">☠️ RIP<br>Mickey (1928-2026)</div>
                                     <div id="lcd-alert" class="hidden">⚠️ FAIM !</div>
                                     <div id="lcd-food-container"></div>
+                                    <div id="lcd-sparkle-container"></div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Physical Buttons -->
+                        <!-- Physical Buttons (4 buttons) -->
                         <div class="shell-buttons">
                             <div class="btn-group">
                                 <button id="t-btn-a" class="physical-btn btn-feed" title="Nourrir (Dollars)"></button>
                                 <span class="btn-tag">NOURRIR</span>
                             </div>
                             <div class="btn-group">
-                                <button id="t-btn-b" class="physical-btn btn-play" title="Jouer"></button>
+                                <button id="t-btn-b" class="physical-btn btn-play" title="Jouer (Disco)"></button>
                                 <span class="btn-tag">JOUER</span>
                             </div>
                             <div class="btn-group">
-                                <button id="t-btn-c" class="physical-btn btn-sleep" title="Sommeil / Réveil"></button>
+                                <button id="t-btn-c" class="physical-btn btn-clean" title="Toilette (Caca)"></button>
+                                <span class="btn-tag">TOILETTE</span>
+                            </div>
+                            <div class="btn-group">
+                                <button id="t-btn-d" class="physical-btn btn-sleep" title="Sommeil / Réveil"></button>
                                 <span class="btn-tag">SOMMEIL</span>
                             </div>
                         </div>
