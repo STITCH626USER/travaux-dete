@@ -475,6 +475,7 @@ const routesData = {
 let currentDirection = "aller"; // "aller" or "retour"
 let currentTarget = "07h45";   // Default for aller: "07h45" or "08h30". For retour: "17h30" or "18h20".
 let currentPhase = "1";
+let currentDayType = "semaine"; // "semaine" or "weekend"
 let includePlanB = true;
 
 // DOM Elements
@@ -485,6 +486,7 @@ const installBanner = document.getElementById("install-banner");
 const btnInstall = document.getElementById("btn-install");
 const btnCancelInstall = document.getElementById("btn-cancel-install");
 const directionButtons = document.querySelectorAll(".direction-control .segment-btn");
+const dayButtons = document.querySelectorAll(".day-control .segment-btn");
 const timeSelector = document.getElementById("time-selector");
 const summaryCard = document.getElementById("summary-card");
 const infoBannerText = document.getElementById("info-banner-text");
@@ -500,6 +502,18 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Adjust time choices based on direction
             setupTimeChoices();
+            updateLabelsAndBanners();
+            renderRoutes();
+        });
+    });
+
+    // Setup Day Type Switcher Handlers
+    dayButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            dayButtons.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentDayType = btn.getAttribute("data-day");
+            
             updateLabelsAndBanners();
             renderRoutes();
         });
@@ -589,9 +603,15 @@ function updateLabelsAndBanners() {
                 <span class="value">Disneyland Paris (MLV)</span>
             </div>
         `;
-        infoBannerText.innerHTML = `
-            <strong>Gare de Nation non desservie :</strong> RER A sans arrêt du 29/06 au 30/08 inclus. La tarification Zone 5 est incluse dans votre pass Navigo Toutes Zones.
-        `;
+        if (currentDayType === "weekend") {
+            infoBannerText.innerHTML = `
+                <strong>Service Week-end RER E :</strong> Les trains du RER E circulent toutes les 30 min (au lieu de 15 min en semaine). Les horaires du Plan B ont été ajustés en conséquence. Nation reste fermée sur le RER A.
+            `;
+        } else {
+            infoBannerText.innerHTML = `
+                <strong>Gare de Nation non desservie :</strong> RER A sans arrêt du 29/06 au 30/08 inclus. La tarification Zone 5 est incluse dans votre pass Navigo Toutes Zones.
+            `;
+        }
     } else {
         summaryCard.innerHTML = `
             <div class="summary-item">
@@ -604,20 +624,84 @@ function updateLabelsAndBanners() {
                 <span class="value">1B Rue Jacques Kablé, Paris</span>
             </div>
         `;
-        infoBannerText.innerHTML = `
-            <strong>Retour Travaux RER A :</strong> La gare de Nation reste fermée en direction de Paris. Pour le retour, l'itinéraire via Val de Fontenay (Plan B) puis RER E (Magenta) est souvent plus rapide et direct pour votre domicile !
-        `;
+        if (currentDayType === "weekend") {
+            infoBannerText.innerHTML = `
+                <strong>Retour Week-end RER E :</strong> Fréquence de 30 min sur le RER E. Les correspondances du Plan B à Val de Fontenay sont plus longues (~21 à 31 min d'attente). Vérifiez bien les horaires.
+            `;
+        } else {
+            infoBannerText.innerHTML = `
+                <strong>Retour Travaux RER A :</strong> La gare de Nation reste fermée en direction de Paris. Pour le retour, l'itinéraire via Val de Fontenay (Plan B) puis RER E (Magenta) est souvent plus rapide et direct pour votre domicile !
+            `;
+        }
     }
+}
+
+// Weekend Timetable Adjustment Helper for RER E Frequency Changes
+function getWeekendAdjustedRoute(originalRoute, target, phase, direction) {
+    const route = JSON.parse(JSON.stringify(originalRoute));
+    if (route.type !== "B") return route;
+    if (phase === "3") return route;
+    
+    if (direction === "aller") {
+        if (target === "07h45") {
+            route.summary[0].label = "06h28";
+            route.summary[4].label = "07h26";
+            route.steps[0].time = "06h28";
+            route.steps[1].time = "06h36";
+            route.steps[2].time = "06h39";
+            route.steps[2].arrTime = "06h54";
+            route.steps[3].time = "06h54";
+            route.steps[3].desc = "Changement de quai pour le RER A (Marche : 2 min). Attente : ~4 min.";
+            route.steps[4].time = "06h58";
+            route.steps[4].arrTime = "07h26";
+            route.steps[4].desc = "Gare de Marne-la-Vallée Chessy. Vous arrivez 19 minutes avant l'objectif de 07h45.";
+        } else if (target === "08h30") {
+            route.summary[0].label = "07h28";
+            route.summary[4].label = "08h25";
+            route.steps[0].time = "07h28";
+            route.steps[1].time = "07h36";
+            route.steps[2].time = "07h39";
+            route.steps[2].arrTime = "07h54";
+            route.steps[3].time = "07h54";
+            route.steps[3].desc = "Changement de quai pour le RER A (Marche : 2 min). Attente : ~4 min.";
+            route.steps[4].time = "07h58";
+            route.steps[4].arrTime = "08h25";
+            route.steps[4].desc = "Gare de Marne-la-Vallée Chessy. Vous arrivez 5 minutes avant l'objectif de 08h30.";
+        }
+    } else if (direction === "retour") {
+        if (target === "17h30") {
+            route.summary[4].label = "18h39";
+            route.steps[1].time = "17h55";
+            route.steps[1].desc = "Changement de quai vers le RER E direction Haussmann (Marche : 2 min). Attente du train week-end : ~21 min.";
+            route.steps[2].time = "18h16";
+            route.steps[2].arrTime = "18h31";
+            route.steps[3].time = "18h31";
+            route.steps[3].desc = "Sortez de la gare et marchez 8 min vers votre domicile. Arrivée à 18h39.";
+        } else if (target === "18h20") {
+            route.summary[4].label = "19h39";
+            route.steps[1].time = "18h45";
+            route.steps[1].desc = "Rejoignez les quais du RER E direction Haussmann (Marche : 2 min). Attente du train week-end : ~31 min.";
+            route.steps[2].time = "19h16";
+            route.steps[2].arrTime = "19h31";
+            route.steps[3].time = "19h31";
+            route.steps[3].desc = "Marchez 8 min vers votre domicile. Arrivée à 19h39.";
+        }
+    }
+    return route;
 }
 
 // Render dynamic route listings based on state
 function renderRoutes() {
     routesContainer.innerHTML = "";
-    const activeRoutes = routesData[currentDirection][currentTarget][currentPhase];
+    let activeRoutes = routesData[currentDirection][currentTarget][currentPhase];
     
     if (!activeRoutes || activeRoutes.length === 0) {
         routesContainer.innerHTML = "<div class='info-banner'>Aucun itinéraire disponible.</div>";
         return;
+    }
+
+    if (currentDayType === "weekend") {
+        activeRoutes = activeRoutes.map(route => getWeekendAdjustedRoute(route, currentTarget, currentPhase, currentDirection));
     }
 
     activeRoutes.forEach((route, index) => {
